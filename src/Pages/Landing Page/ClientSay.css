@@ -1,0 +1,36 @@
+/* .carousel.carousel-slider .control-arrow{
+  background-color: black;
+  font-size: 100px;
+} */
+
+
+/* Style both arrows */
+.carousel .control-arrow {
+  background: rgba(0, 0, 0, 0.5) !important; /* Semi-transparent black background */
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  top: 50% !important;
+  transform: translateY(-50%);
+  z-index: 2;
+  opacity: 1 !important;
+  color: white !important; /* Arrow color inside the circle */
+  font-size: 1.8rem !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Positioning */
+/* .carousel .control-prev.control-arrow {
+  left: -20px;
+} */
+/* 
+.carousel .control-next.control-arrow {
+  right: -20px;
+} */
+
+/* Optional: hover effect for clarity */
+.carousel .control-arrow:hover {
+  background: rgba(0, 0, 0, 0.7) !important;
+}

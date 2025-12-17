@@ -1,0 +1,60 @@
+name: LMS Frontend CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: 🧾 Checkout repo
+        uses: actions/checkout@v3
+
+      - name: 🧰 Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: 📦 Install dependencies
+        run:  npm install --legacy-peer-deps
+
+      - name: 🛠️ Build LMS frontend
+        run: |
+          export NODE_OPTIONS="--max_old_space_size=4096"
+          npm run build
+          
+
+
+      - name: 🚚 Deploy to /var/www/html
+        run: |
+          sudo rm -rf /var/www/html/*
+          sudo cp -r build/* /var/www/html/
+          
+      - name: 🔧 Configure server for PDF.js
+        run: |
+          # Ensure PDF.js files have correct permissions
+          sudo find /var/www/html/pdfjs -type f -name "*.mjs" -exec chmod 644 {} \;
+          sudo find /var/www/html/pdfjs -type f -name "*.wasm" -exec chmod 644 {} \;
+          
+          # Copy server configuration files
+          if [ -f /var/www/html/.htaccess ]; then
+            echo "✅ .htaccess file deployed"
+          else
+            echo "⚠️ .htaccess file missing"
+          fi
+          
+          # Test if PDF.js files are accessible
+          if [ -f /var/www/html/pdfjs/build/pdf.mjs ]; then
+            echo "✅ PDF.js main file deployed"
+          else
+            echo "❌ PDF.js main file missing"
+          fi
+          
+          if [ -f /var/www/html/pdfjs/build/pdf.worker.mjs ]; then
+            echo "✅ PDF.js worker file deployed"
+          else
+            echo "❌ PDF.js worker file missing"
+          fi

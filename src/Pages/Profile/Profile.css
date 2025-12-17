@@ -1,0 +1,140 @@
+
+.profile{
+    padding-bottom: 100px;
+}
+
+
+.profile1{
+
+}
+
+
+.profile2{
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+
+
+.profile3{
+    width: 133px;
+    height: 133px;
+    border-radius: 100%;
+}
+
+.profile3 img{
+    width: 100%;
+    height: 100%;
+    border-radius: 100%;
+}
+
+
+
+.profile4{
+
+}
+
+
+.profile4 h6{
+    font-family: "Inter", sans-serif;
+    font-weight: 500;
+    font-size: 22px;
+    line-height: 26.63px;
+    color: #023D50;
+    margin: 0;
+}
+
+
+.profile4 p{
+    font-family: "Inter", sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 19.36px;
+    color: #636363;
+    margin: 0;
+    padding-top: 10px;
+}
+
+
+
+.profile5{
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-top: 30px;
+    cursor: pointer;
+}
+
+.profile5 span{
+    font-family: "Inter", sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 19.36px;
+    color: #FC9721;
+    margin: 0;
+}
+
+
+.profile6{
+    display: grid;
+    align-items: center;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-top: 50px;
+    width: 75%;
+}
+
+
+.profile7{
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+
+.profile7 label{
+    font-family: "Inter", sans-serif;
+    font-weight: 600;
+    font-size: 10px;
+    line-height: 12.1px;
+    color: #023D50;
+    margin: 0;
+}
+
+
+.profile7 input{
+    width: 100%;
+    height: 40px;
+    border: 0.8px solid #636363;
+    border-radius: 3px;
+    outline: none;
+    padding-left: 15px;
+}
+
+
+.profile7 input::placeholder{
+    font-family: "Inter", sans-serif;
+    font-weight: 500;
+    font-size: 10px;
+    line-height: 12.1px;
+    color: #787878;
+    margin: 0;
+}
+
+
+.profile8 button{
+    margin-top: 17px !important;
+    width: 175px;
+    height: 40px;
+    border-radius: 5px;
+    background-color: #023D50;
+    outline: none;
+    border: none;
+    font-family: "Inter", sans-serif;
+    font-weight: 500;
+    font-size: 18px;
+    line-height: 21.78px;
+    color: #FFFFFF;
+    margin: 0;
+}

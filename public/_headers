@@ -1,0 +1,21 @@
+# Headers for Netlify/Vercel deployment
+/pdfjs/build/*.mjs
+  Content-Type: application/javascript
+
+/pdfjs/build/*.wasm
+  Content-Type: application/wasm
+
+/pdfjs/web/*.mjs
+  Content-Type: application/javascript
+
+# CORS headers for PDF files
+/*.pdf
+  Access-Control-Allow-Origin: *
+  Access-Control-Allow-Methods: GET, HEAD, OPTIONS
+  Access-Control-Allow-Headers: Range, Content-Range, Content-Length
+
+# Security headers
+/*
+  X-Frame-Options: SAMEORIGIN
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin

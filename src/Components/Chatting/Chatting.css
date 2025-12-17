@@ -1,0 +1,239 @@
+.chatting{
+    padding: 0;
+    background-color: #ecfcff;
+    border-radius: 20px;
+}
+
+
+
+
+
+
+.chatting3{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #636363;
+    padding: 15px;
+}
+
+
+
+.chatting4{
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.chatting5{
+    width: 62px;
+    height: 62px;
+    border-radius: 100%;
+}
+
+.chatting5 img{
+    width: 100%;
+    height: 100%;
+    border-radius: 100%;
+}
+
+
+
+.chatting6{
+
+}
+
+.chatting6 h6{
+    font-family: "Inter", sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 19.36px;
+    color: #0F2A44;
+    margin: 0;
+}
+
+.chatting6 p{
+    font-family: "Inter", sans-serif;
+    font-weight: 300;
+    font-size: 10px;
+    line-height: 12.1px;
+    color: #636363;
+    margin: 0;
+    padding-top: 5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+
+
+.chatting7{
+    cursor: pointer;
+}
+
+
+.chatting8{
+    padding: 10px;
+}
+
+
+.chatting9{
+    text-align: center;
+}
+
+.chatting9 p{
+    font-family: "Inter", sans-serif;
+    font-weight: 700;
+    font-size: 10px;
+    line-height: 12.1px;
+    color: #636363;
+    margin: 0;
+}
+
+
+.chatting10{
+    margin-top: 10px;
+}
+
+
+.chatting11{
+    display: flex;
+    flex-direction: column;
+    align-items: end;
+    justify-content: end;
+}
+
+
+.chatting12{
+    width: auto;
+    height: auto;
+    border-radius: 10px 0px 10px 10px;
+    background-color: #0F2A44;
+    /* display: flex;
+    align-items: center;
+    justify-content: center; */
+    padding: 20px;
+}
+
+
+.chatting12 p{
+    font-family: "Inter", sans-serif;
+    font-weight: 400;
+    font-size: 15px;
+    line-height: 19.36px;
+    color: #FFFFFF;
+    margin: 0;
+}
+
+
+.chatting13{
+    padding-top: 5px;
+}
+
+.chatting13 p{
+    font-family: "Inter", sans-serif;
+    font-weight: 700;
+    font-size: 10px;
+    line-height: 12.1px;
+    color: #636363;
+    margin: 0;
+}
+
+
+
+
+
+
+.chatting14{
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+}
+
+
+.chatting15{
+    width: auto;
+    height: auto;
+    border-radius: 0px 10px 10px 10px;
+    background-color: #777C7D33;
+    /* display: flex;
+    align-items: center;
+    justify-content: center; */
+    padding: 20px;
+}
+
+.chatting15 p{
+    font-family: "Inter", sans-serif;
+    font-weight: 400;
+    font-size: 15px;
+    line-height: 19.36px;
+    color: #636363;
+    margin: 0;
+}
+
+.chatting16{
+    padding-top: 5px;
+    text-align: end;
+}
+
+.chatting16 p{
+    font-family: "Inter", sans-serif;
+    font-weight: 700;
+    font-size: 10px;
+    line-height: 12.1px;
+    color: #636363;
+    margin: 0;
+}
+
+
+
+.chatting17{
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+}
+
+.chatting18{
+    cursor: pointer;
+}
+
+
+.chatting19{
+    width: auto;
+    height: auto;
+    border-radius: 10px;
+    background: #A8A8A833;
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    flex: 1;
+    cursor: pointer;
+}
+
+
+.chatting19 input{
+    border: none;
+    outline: none;
+    background-color: transparent;
+    flex: 1;
+    padding-left: 10px;
+}
+
+.chatting19 input::placeholder{
+    font-family: "Inter", sans-serif;
+    font-weight: 200;
+    font-size: 12px;
+    line-height: 14.52px;
+    color: #000000;
+    margin: 0;
+}
+
+
+
+.chatting20{
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    gap: 5px;
+}

@@ -1,0 +1,63 @@
+/* Container Flex Layout */
+.container1 {
+  display: flex;
+  height: 100vh; /* Ensure the container takes full height of the viewport */
+  overflow: hidden; /* Prevent whole layout from scrolling */
+}
+
+/* Sidebar */
+.sidebar55 {
+  width: 18%;
+  flex: 0 0 auto;
+  position: fixed; /* Fix sidebar in place */
+  top: 0;
+  left: 0;
+  bottom: 0;
+  height: 100vh; /* Full height of the viewport */
+  overflow-y: auto; /* Allow sidebar to scroll when content overflows */
+  z-index: 100; /* Ensure it stays on top */
+}
+
+/* Content Adjusts for Sidebar */
+.content {
+  flex: 1;
+  margin-left: 18%; /* Push content to the right to make room for fixed sidebar */
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto; /* Enable scrolling for main content */
+  height: 100vh; /* Ensure it takes full viewport height */
+}
+
+/* Child Component */
+.child-component {
+  margin-top: 75px;
+  flex: 1;
+  padding: 20px;
+  padding-bottom: 0;
+  position: relative;
+}
+
+/* Sidebar Hidden Adjustments */
+
+.sidebar55-hidden .content {
+  flex: 1 1 100%;
+  margin-left: 0; /* When sidebar is hidden, content takes full width */
+}
+
+/* Chat Button */
+.chat {
+  /* position: fixed; */
+  width: 82px;
+  height: 82px;
+  border-radius: 100%;
+  border: 2px solid;
+  background: linear-gradient(135deg, #FCCF31 0%, #F55555 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  top: 80%;
+  right: 30px;
+  z-index: 1000;
+}

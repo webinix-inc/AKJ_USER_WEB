@@ -1,0 +1,172 @@
+.attendance {
+}
+
+.attendance1 {
+}
+
+.attendance2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.attendance2 h6 {
+  font-family: "Inter", sans-serif;
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 21.78px;
+  color: #023d50;
+  margin: 0;
+}
+
+.attendance3 {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.attendance4 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.attendance5 {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.attendance5 label {
+  font-family: "Inter", sans-serif;
+  font-weight: 300;
+  font-size: 14.02px;
+  line-height: 16.97px;
+  color: #023d50;
+  margin: 0;
+}
+
+.attendance6 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: auto;
+  height: 35.05px;
+  border-radius: 8.76px;
+  background: #c0c0c033;
+  border: 0.88px solid #d5d9dd;
+  padding: 10px;
+}
+
+.attendance6 p {
+  font-family: "Inter", sans-serif;
+  font-weight: 300;
+  font-size: 14.02px;
+  line-height: 16.97px;
+  color: #252c58;
+  margin: 0;
+}
+
+.attendance7 {
+  width: auto;
+  height: 35.92px;
+  border-radius: 8.76px;
+  background-color: #023d50;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  cursor: pointer;
+  border: none;
+}
+
+.attendance7 p {
+  font-family: "Inter", sans-serif;
+  font-weight: 300;
+  font-size: 12.27px;
+  line-height: 14.84px;
+  color: #ffffff;
+  margin: 0;
+}
+
+.attendance9 {
+  margin-top: 20px;
+}
+
+.attendance10 {
+  width: 100%;
+  overflow-x: auto;
+  margin-bottom: 20px;
+  box-sizing: border-box;
+}
+
+.attendance10 table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: "Public Sans", sans-serif;
+}
+
+.attendance10 table thead tr {
+  background-color: transparent;
+  border-top: 0.87px solid #D5D9DD;
+  border-bottom: 2.61px solid #D5D9DD;
+  height: 50px;
+}
+
+.attendance10 table th {
+  text-align: left;
+  opacity: 0.5;
+  font-weight: 600; 
+  font-size: 12.2px;
+  line-height: 15.28px;
+  color: #252C58;
+  padding-left: 5px;
+  /* white-space: nowrap; */
+}
+.attendance10 table tbody tr {
+  height: 50px;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.attendance10 table td {
+  text-align: left;
+  font-weight: 500;
+  font-size: 12.2px;
+  line-height: 15.25px;
+  color: #252C58;
+  padding-left: 5px;
+  opacity: 0.5;
+  cursor: pointer;
+  border-bottom: 0.87px solid #D5D9DD;
+  /* white-space: nowrap; */
+}
+
+.attendance10 table tbody tr:hover {
+  background-color: #baeeff;
+}
+
+.attendance10 table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+
+
+
+.attendance11{
+    width: 125px;
+    height: auto;
+    background: #E6EFFC;
+    border-radius: 5.26px;
+    padding: 10px;
+}
+
+
+.attendance11 p{
+    font-family: "Inter", sans-serif;
+    font-weight: 500;
+    font-size: 12.27px;
+    line-height: 14.84px;
+    color: #0764E6;
+    margin: 0;
+}
+

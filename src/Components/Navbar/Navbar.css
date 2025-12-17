@@ -1,0 +1,153 @@
+.navbar111 {
+  padding: 20px;
+}
+
+.navbar1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.navbar2 {
+  display: flex;
+  gap: 10px;
+  flex: 1;
+}
+
+.navbar3 {
+  width: 50%;
+  height: 33px;
+  border: 1px solid #2f5a76;
+  border-radius: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-right: 20px;
+}
+
+.navbar3 input {
+  border: none;
+  outline: none;
+  width: 100%;
+  flex: 1;
+  background-color: transparent;
+  padding-left: 20px;
+}
+
+.navbar4 {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.navbar5 {
+}
+
+.navbar5 button {
+  width: 137px;
+  height: 40px;
+  border: 1px solid #023d50;
+  border-radius: 5px;
+  background-color: #023d50;
+  font-family: "Inter", sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 16.94px;
+  color: #ffffff;
+  margin: 0;
+  cursor: pointer;
+}
+
+.navbar6 {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  border: 0.71px solid #cfcfcf;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.navbar7 {
+  width: auto;
+  height: auto;
+  border: 0.71px solid #cfcfcf;
+  border-radius: 35.71px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 5px 10px 5px 10px;
+}
+
+.navbar8 {
+  width: 29.29px;
+  height: 29.29px;
+  border-radius: 50%;
+}
+
+.navbar8 img {
+  width: 100%;
+  height: 100%;
+}
+
+.navbar9 {
+  cursor: pointer;
+}
+
+/* Remove default background color */
+.custom-toggle {
+  background-color:transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin-top: 15px;
+}
+
+.custom-arrow {
+  color: inherit; 
+}
+
+.custom-toggle:hover,
+.custom-toggle:focus,
+.custom-toggle:active,
+.custom-toggle.show {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+
+
+
+.navbar10{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+
+.navbar10 p{
+    font-family: "Inter", sans-serif;
+    font-weight: 500;
+    font-size: 15px;
+    line-height: 14.52px;
+    color: #023D50;
+    margin: 0;
+}
+
+
+.navbar11{
+    margin-top: 10px;
+}
+
+
+.navbar11:hover,
+.navbar11:focus,
+.navbar11:active,
+.navbar11.show {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+

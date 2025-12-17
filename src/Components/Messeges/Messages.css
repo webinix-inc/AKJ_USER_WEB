@@ -1,0 +1,232 @@
+.message {
+    margin-top: 20px;
+    display: flex;
+    max-width: 1100px;
+    gap: 50px;
+  }
+
+  
+  
+  .message1 {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: 100vh;
+    overflow-y: scroll;
+  }
+  
+  .message2 {
+    width: auto;
+    height: auto;
+    padding: 20px 10px 20px 10px;
+    background-color: transparent;
+    border-radius: 20px;
+    display: flex;
+    gap: 5px;
+    border: 1px solid #0067b2;
+    cursor: pointer;
+  }
+  
+  .message2 h6 {
+    font-family: "Open Sans", sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 27.24px;
+    color: #000000;
+    margin: 0;
+  }
+  
+  .message3 {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .message4 {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+  }
+  
+  .message4 img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+  }
+  
+  .message5 {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .message5 p {
+    font-family: "Open Sans", sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 21.79px;
+    color: #000000;
+    margin: 0;
+  }
+  
+  .message6 {
+  }
+  
+  .message7 {
+    max-width: 634px;
+    width: auto;
+    height: auto;
+    background: #00000033;
+    border-radius: 10px;
+    border: 1px solid #b2b2b2;
+  }
+  
+  .message8 {
+    border-bottom: 1px solid #b2b2b2;
+    padding: 15px;
+  }
+  
+  .message9 {
+    padding: 20px;
+  }
+  
+  .message10 {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .message11 {
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    background-color: #1a85ff;
+  }
+  
+  .message11 img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+  }
+  
+  .message12 {
+    max-width: 367px;
+    width: auto;
+    height: auto;
+    border-radius: 0px 20px 20px 20px;
+    background: #fbeee666;
+    border: 1px solid #1a85ff;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 20px;
+    word-wrap: break-word;
+  }
+  
+  .message12 p {
+    font-family: "Open Sans", sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 21.79px;
+    color: #000000;
+    margin: 0;
+  }
+  
+  .message13 {
+    display: flex;
+    justify-content: end;
+    gap: 10px;
+  }
+  
+  .message14 {
+    max-width: 367px;
+    width: auto;
+    height: auto;
+    border-radius: 20px 0px 20px 20px;
+    background: #fbeee666;
+    border: 1px solid #1a85ff;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 20px;
+  }
+  
+  .message14 p {
+    font-family: "Open Sans", sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 21.79px;
+    color: #000000;
+    margin: 0;
+  }
+  
+  .message15 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 20px;
+  }
+  
+  .message16 {
+    width: 448px;
+    height: 52px;
+    background: #ffffff66;
+    border-radius: 30px;
+    border: 2px solid #d4d2d1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  
+  .message16 input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: "Open Sans", sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 21.79px;
+    color: #000000;
+    margin: 0;
+  }
+  
+  .message16 input::placeholder {
+    font-family: "Open Sans", sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 21.79px;
+    color: #d4d2d1;
+    margin: 0;
+  }
+  
+  .message17 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+  }
+  
+  .message18 {
+  }
+  
+  .message18 button {
+    width: 118px;
+    height: 52px;
+    border-radius: 30px;
+    background: #ffffff;
+    border: 2px solid #d4d2d1;
+    outline: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    font-family: "Open Sans", sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 21.79px;
+    color: #0067b2;
+    margin: 0;
+  }
+  

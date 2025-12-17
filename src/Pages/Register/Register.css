@@ -1,0 +1,178 @@
+.register {
+  padding-left: 30px;
+  position: relative;
+}
+
+.register1 {
+  display: flex;
+  gap: 50px;
+}
+
+.register2 {
+  /* border: 1px solid red; */
+  height: 100vh;
+  width: 50%;
+  position: relative;
+}
+
+.register222 {
+  z-index: 1;
+  position: absolute;
+  left: 0;
+  top: 10px;
+  cursor: pointer;
+}
+
+.register2 img {
+  width: 100%;
+  height: 100%;
+}
+
+.register3 {
+  margin-top: 50px;
+  flex: 1;
+  padding-left: 30px;
+}
+
+.register4 {
+}
+
+.register4 h3 {
+  font-family: "Inter", sans-serif;
+  font-weight: 700;
+  font-size: 41.21px;
+  line-height: 49.87px;
+  color: #023d50;
+  margin: 0;
+}
+
+.register4 p {
+  font-family: "Inter", sans-serif;
+  font-weight: 500;
+  font-size: 15.6px;
+  line-height: 24.94px;
+  color: #023d50;
+  margin: 0;
+  margin-top: 10px;
+}
+
+.register3 span {
+  font-family: "Inter", sans-serif;
+  font-weight: 500;
+  font-size: 15.6px;
+  line-height: 24.94px;
+  color: #fc9721;
+  margin: 0;
+  cursor: pointer;
+}
+
+.register5 {
+  position: absolute;
+  bottom: 50px;
+  margin-top: 50px;
+}
+
+.register5 p {
+  font-family: "Inter", sans-serif;
+  font-weight: 500;
+  font-size: 15.99px;
+  line-height: 22.98px;
+  letter-spacing: 3%;
+  color: #788ca0;
+  margin: 0;
+}
+
+.register5 span {
+  font-family: "Inter", sans-serif;
+  font-weight: 500;
+  font-size: 15.99px;
+  line-height: 22.98px;
+  letter-spacing: 3%;
+  color: #023d50;
+  margin: 0;
+}
+
+.register6 {
+  margin-top: 20px;
+  padding-left: 20px;
+}
+
+.register6 p {
+  font-family: "Inter", sans-serif;
+  font-weight: 500;
+  font-size: 15.99px;
+  line-height: 22.98px;
+  letter-spacing: 3%;
+  color: #7a8b94;
+  margin: 0;
+}
+
+.register6 span {
+  font-family: "Inter", sans-serif;
+  font-weight: 500;
+  font-size: 15.99px;
+  line-height: 22.98px;
+  letter-spacing: 3%;
+  color: #023d50;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60%;
+}
+
+.otp-container {
+  display: flex;
+  justify-content: center;
+  width: 70%;
+  margin: auto;
+  margin: 20px 0;
+}
+
+.otp-input {
+  width: 40px;
+  height: 40px;
+  margin: 0 5px;
+  text-align: center;
+  font-size: 18px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;
+}
+
+.otp-input:focus {
+  border-color: #023D50;
+  outline: none;
+  box-shadow: 0 0 5px #023D50;
+}
+
+
+
+
+.register9{
+  text-align: center;
+  width: 70%;
+  margin-top: 15px;
+}
+
+
+.register9 p{
+  font-family: "Inter", sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 21.78px;
+  letter-spacing: 3%;
+  color: #7C7C7C;
+  margin: 0;
+}
+
+.register9 span{
+  font-family: "Inter", sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 21.78px;
+  letter-spacing: 3%;
+  color: #023D50;
+  margin: 0;
+  border-bottom: 1px solid #023D50;
+}
