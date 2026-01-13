@@ -6,6 +6,7 @@ import { SubscriptionProvider } from './SubscriptionContext';
 import { PaymentProvider } from './PaymentContext';
 import { CouponProvider } from './CouponContext';
 import { LoadingProvider } from './LoadingContext';
+import { SocketProvider } from './SocketContext'; // Import SocketProvider
 import ErrorBoundary from '../Components/ErrorBoundary/ErrorBoundary';
 
 // Optimized provider composition to reduce nesting and improve performance
@@ -14,17 +15,19 @@ const AppProviders = ({ children }) => {
     <ErrorBoundary>
       <LoadingProvider>
         <UserProvider>
-          <CourseProvider>
-            <LiveClassProvider>
-              <SubscriptionProvider>
-                <PaymentProvider>
-                  <CouponProvider>
-                    {children}
-                  </CouponProvider>
-                </PaymentProvider>
-              </SubscriptionProvider>
-            </LiveClassProvider>
-          </CourseProvider>
+          <SocketProvider>
+            <CourseProvider>
+              <LiveClassProvider>
+                <SubscriptionProvider>
+                  <PaymentProvider>
+                    <CouponProvider>
+                      {children}
+                    </CouponProvider>
+                  </PaymentProvider>
+                </SubscriptionProvider>
+              </LiveClassProvider>
+            </CourseProvider>
+          </SocketProvider>
         </UserProvider>
       </LoadingProvider>
     </ErrorBoundary>

@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect } from "react";
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -51,9 +51,54 @@ import VideoPlayer from "./Components/VideoPlayer/VideoPlayer";
 import AppProviders from "./Context/AppProviders";
 import AuthRoute from "./utils/AuthRoute";
 import PrivateRoute from "./utils/PrivateRoute";
+import { useSocket } from "./Context/SocketContext"; // Import useSocket
+import { toast } from "react-toastify"; // Ensure toast is imported
 
 // Lazy loaded components for better performance
 const Messages = React.lazy(() => import("././Components/Messeges/Messages"));
+
+const AppContent = () => {
+  const { socket } = useSocket();
+
+  useEffect(() => {
+    if (socket) {
+      const handleNotification = (data) => {
+        console.log("New notification received:", data);
+        toast.info(
+          <div>
+            <h4 className="font-bold">{data.title}</h4>
+            <p className="text-sm">{data.message}</p>
+          </div>,
+          {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          }
+        );
+        // Optional: Play sound or update badge count here
+      };
+
+      socket.on("notification", handleNotification);
+
+      return () => {
+        socket.off("notification", handleNotification);
+      };
+    }
+  }, [socket]);
+
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        {/* ... existing routes ... */}
+        {/* Helper component to keep App clean, but here we just return routes */}
+      </Routes>
+    </Router>
+  );
+};
 
 function App() {
   return (
@@ -70,245 +115,275 @@ function App() {
         draggable
         pauseOnHover
       />
-      <Router>
-        <Routes>
-                    <Route path="/" element={<LandingPage />} />
-                    {/* Authenticated Routes */}
-                    <Route
-                      path="/home"
-                      element={
-                        <PrivateRoute>
-                          <Home />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/explorecourses"
-                      element={<ExploreCourses />}
-                    />
-                    <Route
-                      path="/explorecourses/:id"
-                      element={<CourseDetails />}
-                    />
-
-                    {/* Test Panel start from here */}
-
-                    <Route
-                      path="/exam-page/:id"
-                      element={<ExamPage />}
-                    />
-
-                    <Route path="/test/:id" element={<TestDetails />} />
-
-                    <Route path="/give-test/:id" element={<GiveTests />} />
-                    <Route path="/instruction/:id" element={<InstructionsDone />} />
-                    <Route path="/scorecard/:id" element={<FinalSubmit />} />
-
-                    {/* Test Panel end here */}
-                    <Route path="/free-test" element={<FreeTest />} />
-                    <Route
-                      path="/free-test/:id"
-                      element={
-                        <PrivateRoute>
-                          <FreeTestExamPage />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/pricingplans"
-                      element={
-                        <PrivateRoute>
-                          <PricingPlans />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/paymentpage"
-                      element={
-                        <PrivateRoute>
-                          <BuyNowPage1 />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/studystore/categories"
-                      element={<StudyStore />}
-                    />
-                    <Route path="/contact" element={<Contact />} />
-                    <Route
-                      path="/studystore/my_orders"
-                      element={
-                        <PrivateRoute>
-                          <MyOrders />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/studystore/my_cart"
-                      element={
-                        <PrivateRoute>
-                          <MyCart />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/studystore/delivered"
-                      element={
-                        <PrivateRoute>
-                          <Delivered />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/studystore/books/:id"
-                      element={
-                        <PrivateRoute>
-                          <BuyNow />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/checkout/:id"
-                      element={
-                        <PrivateRoute>
-                          <BuyNowPage />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/checkout"
-                      element={
-                        <PrivateRoute>
-                          <Checkout />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/mycourses"
-                      element={
-                        <PrivateRoute>
-                          <PurchasedCourses />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/studystore/categories/buynow/overviewbill"
-                      element={
-                        <PrivateRoute>
-                          <OrderReview />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/studystore/categories/buynow/overviewbill/ordersuccessful"
-                      element={
-                        <PrivateRoute>
-                          <OrderSuccessful />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/settings"
-                      element={
-                        <PrivateRoute>
-                          <Settings />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/Messages"
-                      element={
-                        <PrivateRoute>
-                          <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600"></div></div>}>
-                            <Messages />
-                          </Suspense>
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/profile"
-                      element={
-                        <PrivateRoute>
-                          <Profile />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/noticeoverview"
-                      element={
-                        <PrivateRoute>
-                          <NoticeOverview />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/assignment"
-                      element={
-                        <PrivateRoute>
-                          <Assignment />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/results"
-                      element={
-                        <PrivateRoute>
-                          <Results />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/attendanceoverview"
-                      element={
-                        <PrivateRoute>
-                          <AttendanceOverview />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/notification"
-                      element={
-                        <PrivateRoute>
-                          <Notification />
-                        </PrivateRoute>
-                      }
-                    />
-                    {/* Auth Routes (Public for unauthenticated users) */}
-                    <Route
-                      path="/register"
-                      element={
-                        <AuthRoute>
-                          <Register />
-                        </AuthRoute>
-                      }
-                    />
-                    <Route
-                      path="/otpverify"
-                      element={
-                        <AuthRoute>
-                          <OTPVerify />
-                        </AuthRoute>
-                      }
-                    />
-                    <Route path="/allFreeCourses" element={<AllFreeCourse />} />
-
-                    <Route path="/terms" element={<Terms />} />
-                    <Route path="/privacy" element={<Privacy />} />
-                    <Route path="/refund" element={<Refund />} />
-
-                    <Route
-                      path="/login"
-                      element={
-                        <AuthRoute>
-                          <Login />
-                        </AuthRoute>
-                      }
-                    />
-                    <Route path="/video/:videoId" element={<VideoPlayer />} />
-        </Routes>
-      </Router>
+      <SocketWrapper />
     </AppProviders>
   );
 }
+
+// Wrapper component to use hooks inside AppProviders
+const SocketWrapper = () => {
+  const { socket } = useSocket();
+
+  useEffect(() => {
+    if (socket) {
+      const handleNotification = (data) => {
+        // console.log("New notification received:", data);
+        toast.info(
+          <div>
+            <h4 className="font-bold">{data.title}</h4>
+            <p className="text-sm">{data.message}</p>
+          </div>
+        );
+      };
+
+      socket.on("notification", handleNotification);
+
+      return () => {
+        socket.off("notification", handleNotification);
+      };
+    }
+  }, [socket]);
+
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        {/* Authenticated Routes */}
+        <Route
+          path="/home"
+          element={
+            <PrivateRoute>
+              <Home />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/explorecourses"
+          element={<ExploreCourses />}
+        />
+        <Route
+          path="/explorecourses/:id"
+          element={<CourseDetails />}
+        />
+
+        {/* Test Panel start from here */}
+
+        <Route
+          path="/exam-page/:id"
+          element={<ExamPage />}
+        />
+
+        <Route path="/test/:id" element={<TestDetails />} />
+
+        <Route path="/give-test/:id" element={<GiveTests />} />
+        <Route path="/instruction/:id" element={<InstructionsDone />} />
+        <Route path="/scorecard/:id" element={<FinalSubmit />} />
+
+        {/* Test Panel end here */}
+        <Route path="/free-test" element={<FreeTest />} />
+        <Route
+          path="/free-test/:id"
+          element={
+            <PrivateRoute>
+              <FreeTestExamPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/pricingplans"
+          element={
+            <PrivateRoute>
+              <PricingPlans />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/paymentpage"
+          element={
+            <PrivateRoute>
+              <BuyNowPage1 />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/studystore/categories"
+          element={<StudyStore />}
+        />
+        <Route path="/contact" element={<Contact />} />
+        <Route
+          path="/studystore/my_orders"
+          element={
+            <PrivateRoute>
+              <MyOrders />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/studystore/my_cart"
+          element={
+            <PrivateRoute>
+              <MyCart />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/studystore/delivered"
+          element={
+            <PrivateRoute>
+              <Delivered />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/studystore/books/:id"
+          element={
+            <PrivateRoute>
+              <BuyNow />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/checkout/:id"
+          element={
+            <PrivateRoute>
+              <BuyNowPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/checkout"
+          element={
+            <PrivateRoute>
+              <Checkout />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/mycourses"
+          element={
+            <PrivateRoute>
+              <PurchasedCourses />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/studystore/categories/buynow/overviewbill"
+          element={
+            <PrivateRoute>
+              <OrderReview />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/studystore/categories/buynow/overviewbill/ordersuccessful"
+          element={
+            <PrivateRoute>
+              <OrderSuccessful />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <PrivateRoute>
+              <Settings />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/Messages"
+          element={
+            <PrivateRoute>
+              <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600"></div></div>}>
+                <Messages />
+              </Suspense>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <PrivateRoute>
+              <Profile />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/noticeoverview"
+          element={
+            <PrivateRoute>
+              <NoticeOverview />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/assignment"
+          element={
+            <PrivateRoute>
+              <Assignment />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/results"
+          element={
+            <PrivateRoute>
+              <Results />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/attendanceoverview"
+          element={
+            <PrivateRoute>
+              <AttendanceOverview />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/notification"
+          element={
+            <PrivateRoute>
+              <Notification />
+            </PrivateRoute>
+          }
+        />
+        {/* Auth Routes (Public for unauthenticated users) */}
+        <Route
+          path="/register"
+          element={
+            <AuthRoute>
+              <Register />
+            </AuthRoute>
+          }
+        />
+        <Route
+          path="/otpverify"
+          element={
+            <AuthRoute>
+              <OTPVerify />
+            </AuthRoute>
+          }
+        />
+        <Route path="/allFreeCourses" element={<AllFreeCourse />} />
+
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/refund" element={<Refund />} />
+
+        <Route
+          path="/login"
+          element={
+            <AuthRoute>
+              <Login />
+            </AuthRoute>
+          }
+        />
+        <Route path="/video/:videoId" element={<VideoPlayer />} />
+      </Routes>
+    </Router>
+  );
+};
+
 
 export default App;

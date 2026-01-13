@@ -72,7 +72,13 @@ const Messages = () => {
 
   useEffect(() => {
     setActiveIndex(1);
-  }, []);
+
+    // Join user's own room to receive real-time messages
+    if (userData?.userId) {
+      socket.emit("join", userData.userId);
+      console.log("User joined socket room:", userData.userId);
+    }
+  }, [userData]);
 
   // FIX: Add proper WebSocket connection cleanup and monitoring
   useEffect(() => {
@@ -94,11 +100,47 @@ const Messages = () => {
           ...prev,
           [selectedUser._id]: 0,
         }));
+
+        // Move user to top and update last message
+        setData((prevData) => {
+          const userIndex = prevData.findIndex(u => u._id === selectedUser._id);
+          if (userIndex !== -1) {
+            const user = {
+              ...prevData[userIndex],
+              lastMessage: message.content,
+              lastMessageTime: message.createdAt || new Date().toISOString()
+            };
+            return [user, ...prevData.filter(u => u._id !== selectedUser._id)];
+          }
+          return prevData;
+        });
       } else {
+        // Message from a user that is NOT currently selected
+        // Increment their unread count
+        const senderId = message.sender?.toString() || message.sender;
+
         setUnreadNotifications((prev) => ({
           ...prev,
-          [message.sender]: (prev[message.sender] || 0) + 1,
+          [senderId]: (prev[senderId] || 0) + 1,
         }));
+
+        // Update data state to show unread count badge and move user to top
+        setData((prevData) => {
+          const userIndex = prevData.findIndex(u =>
+            u._id === senderId || u._id?.toString() === senderId
+          );
+
+          if (userIndex !== -1) {
+            const user = {
+              ...prevData[userIndex],
+              unreadCount: (prevData[userIndex].unreadCount || 0) + 1,
+              lastMessage: message.content,
+              lastMessageTime: message.createdAt || new Date().toISOString()
+            };
+            return [user, ...prevData.filter(u => u._id !== senderId && u._id?.toString() !== senderId)];
+          }
+          return prevData;
+        });
       }
     };
 
@@ -234,14 +276,14 @@ const Messages = () => {
       ...prev,
       [user._id]: 0,
     }));
-    
+
     // Mark messages as read when opening chat
     try {
       await api.get(`/chat/markAsRead/${user._id}`);
       // Update local state to remove unread count
-      setData(prevData => 
-        prevData.map(u => 
-          u._id === user._id 
+      setData(prevData =>
+        prevData.map(u =>
+          u._id === user._id
             ? { ...u, unreadCount: 0 }
             : u
         )
@@ -249,7 +291,7 @@ const Messages = () => {
     } catch (error) {
       // Error marking messages as read, but continue silently
     }
-    
+
     await fetchMessages(user._id);
   };
 
@@ -258,8 +300,8 @@ const Messages = () => {
     setLoadingMessages(true);
     try {
       const response = await api.get(`/chat/${receiverId}`, {
-        params: { 
-          cursor, 
+        params: {
+          cursor,
           limit: UI_CONSTANTS.MESSAGE_FETCH_LIMIT // Use centralized constant
         },
       });
@@ -279,7 +321,7 @@ const Messages = () => {
           // Initial load - replace existing
           newMessages = normalized;
         }
-        
+
         // Always apply memory limit but be smarter about it
         return limitMessageArray(newMessages, MAX_MESSAGES_PER_CHAT);
       });
@@ -468,8 +510,8 @@ const Messages = () => {
                   <div className="flex items-center">
                     <h2 className="app-body font-bold font-apple">Chats</h2>
                     {/* Connection Status Indicator */}
-                    <div className={`ml-2 w-2 h-2 rounded-full ${socketConnected ? 'bg-apple-green' : 'bg-apple-red'} animate-apple-pulse`} 
-                         title={socketConnected ? 'Connected' : 'Disconnected'}></div>
+                    <div className={`ml-2 w-2 h-2 rounded-full ${socketConnected ? 'bg-apple-green' : 'bg-apple-red'} animate-apple-pulse`}
+                      title={socketConnected ? 'Connected' : 'Disconnected'}></div>
                   </div>
                   <div className="flex items-center space-x-2">
                     <button
@@ -513,11 +555,10 @@ const Messages = () => {
                     {filteredUsers.map((user, index) => (
                       <div
                         key={user._id}
-                        className={`p-3 rounded-lg cursor-pointer transition-all duration-200 ${
-                          activeIndex === index 
-                            ? "bg-white shadow-md border border-blue-200" 
-                            : "hover:bg-white/50"
-                        }`}
+                        className={`p-3 rounded-lg cursor-pointer transition-all duration-200 ${activeIndex === index
+                          ? "bg-white shadow-md border border-blue-200"
+                          : "hover:bg-white/50"
+                          }`}
                         onClick={() => handleUserClick(index, user)}
                       >
                         <div className="flex items-center space-x-2">
@@ -546,11 +587,10 @@ const Messages = () => {
                     {data.map((user, index) => (
                       <div
                         key={user._id}
-                        className={`p-2 rounded-lg cursor-pointer transition-all duration-200 ${
-                          activeIndex === index 
-                            ? "bg-white shadow-md border border-blue-200" 
-                            : "hover:bg-white/50"
-                        }`}
+                        className={`p-2 rounded-lg cursor-pointer transition-all duration-200 ${activeIndex === index
+                          ? "bg-white shadow-md border border-blue-200"
+                          : "hover:bg-white/50"
+                          }`}
                         onClick={() => handleUserClick(index, user)}
                       >
                         <div className="flex items-center space-x-2">
@@ -565,8 +605,8 @@ const Messages = () => {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between mb-0.5">
                               <p className="font-medium text-[#023d50] truncate text-xs">
-                                {user.firstName ? 
-                                  (user.lastName ? `${user.firstName} ${user.lastName}` : user.firstName) : 
+                                {user.firstName ?
+                                  (user.lastName ? `${user.firstName} ${user.lastName}` : user.firstName) :
                                   (user.userType === 'ADMIN' ? 'AKJ Classes Admin' : user.userType)
                                 }
                               </p>
@@ -576,21 +616,16 @@ const Messages = () => {
                             </div>
                             <div className="flex items-center justify-between">
                               <div className="flex items-center text-xs text-gray-600 truncate">
-                                <span className="mr-1">
-                                  {user.unreadCount > 0 ? (
+                                {/* Only show tick indicator for messages YOU sent */}
+                                {user.isLastMessageSentByMe && (
+                                  <span className="mr-1">
                                     <IoMdDoneAll
-                                      className="text-gray-400"
-                                      title="Unread"
+                                      className={user.unreadCount > 0 ? "text-gray-400" : "text-[#0086b2]"}
+                                      title={user.unreadCount > 0 ? "Delivered" : "Read"}
                                       size={12}
                                     />
-                                  ) : (
-                                    <IoMdCheckbox
-                                      className="text-[#0086b2]"
-                                      title="Read"
-                                      size={12}
-                                    />
-                                  )}
-                                </span>
+                                  </span>
+                                )}
                                 <span className="truncate">{user.lastMessage}</span>
                               </div>
                               {/* Unread Count Badge */}
@@ -635,9 +670,8 @@ const Messages = () => {
                       {currentMessages.map((msg) => (
                         <div
                           key={msg._id}
-                          className={`flex items-end ${
-                            msg.sender === userData.userId ? "justify-end" : "justify-start"
-                          }`}
+                          className={`flex items-end ${msg.sender === userData.userId ? "justify-end" : "justify-start"
+                            }`}
                         >
                           {msg.sender !== userData.userId && (
                             <div className="w-10 h-10 mr-3 flex-shrink-0">
@@ -650,110 +684,109 @@ const Messages = () => {
                           )}
 
                           <div
-                            className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl shadow-sm ${
-                              msg.sender === userData.userId
-                                ? "bg-gradient-to-r from-[#023d50] to-[#0086b2] text-white rounded-br-md"
-                                : "bg-white text-gray-800 border border-gray-200 rounded-bl-md"
-                            }`}
+                            className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl shadow-sm ${msg.sender === userData.userId
+                              ? "bg-gradient-to-r from-[#023d50] to-[#0086b2] text-white rounded-br-md"
+                              : "bg-white text-gray-800 border border-gray-200 rounded-bl-md"
+                              }`}
                           >
-                    {msg.attachments && msg.attachments.length > 0 ? (
-                      <div className="space-y-2">
-                        {msg.attachments.map((file, i) => {
-                          const isImage = file.mimeType?.startsWith("image/");
-                          const isVideo = file.mimeType?.startsWith("video/");
-                          const isPDF = file.mimeType === "application/pdf";
-                          const isDocument = file.mimeType?.includes("document") || 
-                                           file.mimeType?.includes("word") ||
-                                           file.mimeType?.includes("excel") ||
-                                           file.mimeType?.includes("powerpoint");
-                          
-                          return (
-                            <div key={i} className="border border-gray-300 rounded-lg p-2 bg-gray-50">
-                              {isImage ? (
-                                <div>
-                                  <img
-                                    src={file.url}
-                                    alt={file.filename}
-                                    className="w-40 rounded shadow-md cursor-pointer hover:opacity-80"
-                                    crossOrigin="anonymous"
-                                    onClick={() => window.open(file.url, '_blank')}
-                                    onError={(e) => {
-                                      console.error('Image failed to load:', file.url);
-                                      e.target.style.display = 'none';
-                                      e.target.nextElementSibling.style.color = 'red';
-                                      e.target.nextElementSibling.innerHTML = `❌ Failed to load: ${file.filename}`;
-                                    }}
-                                    onLoad={() => console.log('Image loaded successfully:', file.url)}
-                                  />
-                                  <p className="text-xs text-gray-500 mt-1">{file.filename}</p>
-                                </div>
-                              ) : isVideo ? (
-                                <div>
-                                  <video
-                                    src={file.url}
-                                    controls
-                                    className="w-48 h-auto rounded shadow-md"
-                                  />
-                                  <p className="text-xs text-gray-500 mt-1">{file.filename}</p>
-                                </div>
-                              ) : isPDF ? (
-                                <a
-                                  href={file.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex items-center space-x-2 text-red-600 hover:text-red-700 p-2 bg-white rounded"
-                                >
-                                  <span className="text-2xl">📄</span>
-                                  <div>
-                                    <p className="font-medium">{file.filename}</p>
-                                    <p className="text-xs text-gray-500">PDF Document • {(file.size / 1024).toFixed(1)} KB</p>
-                                  </div>
-                                </a>
-                              ) : isDocument ? (
-                                <a
-                                  href={file.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 p-2 bg-white rounded"
-                                >
-                                  <span className="text-2xl">📋</span>
-                                  <div>
-                                    <p className="font-medium">{file.filename}</p>
-                                    <p className="text-xs text-gray-500">Document • {(file.size / 1024).toFixed(1)} KB</p>
-                                  </div>
-                                </a>
-                              ) : (
-                                <a
-                                  href={file.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex items-center space-x-2 text-green-600 hover:text-green-700 p-2 bg-white rounded"
-                                >
-                                  <span className="text-2xl">📎</span>
-                                  <div>
-                                    <p className="font-medium">{file.filename}</p>
-                                    <p className="text-xs text-gray-500">File • {(file.size / 1024).toFixed(1)} KB</p>
-                                  </div>
-                                </a>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : msg.content ? (
-                      <p>{msg.content}</p>
-                    ) : null}
+                            {msg.attachments && msg.attachments.length > 0 ? (
+                              <div className="space-y-2">
+                                {msg.attachments.map((file, i) => {
+                                  const isImage = file.mimeType?.startsWith("image/");
+                                  const isVideo = file.mimeType?.startsWith("video/");
+                                  const isPDF = file.mimeType === "application/pdf";
+                                  const isDocument = file.mimeType?.includes("document") ||
+                                    file.mimeType?.includes("word") ||
+                                    file.mimeType?.includes("excel") ||
+                                    file.mimeType?.includes("powerpoint");
 
-                    <div className="text-xs text-gray-300 mt-2">
-                      {msg.createdAt &&
-                        format(
-                          new Date(msg.createdAt),
-                          "MMMM dd, yyyy hh:mm a"
-                        )}
-                    </div>
-                  </div>
-                </div>
-              ))}
+                                  return (
+                                    <div key={i} className="border border-gray-300 rounded-lg p-2 bg-gray-50">
+                                      {isImage ? (
+                                        <div>
+                                          <img
+                                            src={file.url}
+                                            alt={file.filename}
+                                            className="w-40 rounded shadow-md cursor-pointer hover:opacity-80"
+                                            crossOrigin="anonymous"
+                                            onClick={() => window.open(file.url, '_blank')}
+                                            onError={(e) => {
+                                              console.error('Image failed to load:', file.url);
+                                              e.target.style.display = 'none';
+                                              e.target.nextElementSibling.style.color = 'red';
+                                              e.target.nextElementSibling.innerHTML = `❌ Failed to load: ${file.filename}`;
+                                            }}
+                                            onLoad={() => console.log('Image loaded successfully:', file.url)}
+                                          />
+                                          <p className="text-xs text-gray-500 mt-1">{file.filename}</p>
+                                        </div>
+                                      ) : isVideo ? (
+                                        <div>
+                                          <video
+                                            src={file.url}
+                                            controls
+                                            className="w-48 h-auto rounded shadow-md"
+                                          />
+                                          <p className="text-xs text-gray-500 mt-1">{file.filename}</p>
+                                        </div>
+                                      ) : isPDF ? (
+                                        <a
+                                          href={file.url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="flex items-center space-x-2 text-red-600 hover:text-red-700 p-2 bg-white rounded"
+                                        >
+                                          <span className="text-2xl">📄</span>
+                                          <div>
+                                            <p className="font-medium">{file.filename}</p>
+                                            <p className="text-xs text-gray-500">PDF Document • {(file.size / 1024).toFixed(1)} KB</p>
+                                          </div>
+                                        </a>
+                                      ) : isDocument ? (
+                                        <a
+                                          href={file.url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 p-2 bg-white rounded"
+                                        >
+                                          <span className="text-2xl">📋</span>
+                                          <div>
+                                            <p className="font-medium">{file.filename}</p>
+                                            <p className="text-xs text-gray-500">Document • {(file.size / 1024).toFixed(1)} KB</p>
+                                          </div>
+                                        </a>
+                                      ) : (
+                                        <a
+                                          href={file.url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="flex items-center space-x-2 text-green-600 hover:text-green-700 p-2 bg-white rounded"
+                                        >
+                                          <span className="text-2xl">📎</span>
+                                          <div>
+                                            <p className="font-medium">{file.filename}</p>
+                                            <p className="text-xs text-gray-500">File • {(file.size / 1024).toFixed(1)} KB</p>
+                                          </div>
+                                        </a>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            ) : msg.content ? (
+                              <p>{msg.content}</p>
+                            ) : null}
+
+                            <div className="text-xs text-gray-300 mt-2">
+                              {msg.createdAt &&
+                                format(
+                                  new Date(msg.createdAt),
+                                  "MMMM dd, yyyy hh:mm a"
+                                )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
 

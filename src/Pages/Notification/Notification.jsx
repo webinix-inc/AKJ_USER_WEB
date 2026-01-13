@@ -3,9 +3,11 @@ import "./Notification.css";
 import HOC from "../../Components/HOC/HOC";
 import api from "../../api/axios";
 import { useUser } from "../../Context/UserContext";
+import { useSocket } from "../../Context/SocketContext";
 
 const Notification = () => {
   const { profileData, fetchUserProfile } = useUser();
+  const { socket } = useSocket();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -40,18 +42,38 @@ const Notification = () => {
     fetchNotifications();
   }, []);
 
+  // Real-time updates
   useEffect(() => {
-    if (!profileData) {
-      fetchUserProfile();
+    if (socket) {
+      const handleNewNotification = (newNotification) => {
+        setNotifications(prev => [newNotification, ...prev]);
+      };
+
+      socket.on('notification', handleNewNotification);
+
+      return () => {
+        socket.off('notification', handleNewNotification);
+      };
     }
-  }, [profileData, fetchUserProfile]);
+  }, [socket]);
 
   useEffect(() => {
+    // DEBUG: Log all notifications to see what we have
+    console.log("📢 All Notifications:", notifications);
+    console.log("👤 Profile Data:", profileData);
+
+    // TEMPORARY DEBUG: Disable filtering to show EVERYTHING
+    setFilteredNotifications(notifications);
+
+    /* 
     if (profileData?.purchasedCourses && notifications.length > 0) {
       const purchasedCourses = profileData.purchasedCourses.map(
         (courseObj) => courseObj?.course?.toLowerCase() || ""
       );
       const filtered = notifications.filter((notification) => {
+        // ALWAYS show 'NEW_COURSE_PURCHASE' notifications regardless of profile sync status
+        if (notification.type === 'NEW_COURSE_PURCHASE') return true;
+
         if (
           notification.courses &&
           Array.isArray(notification.courses) &&
@@ -70,6 +92,7 @@ const Notification = () => {
     } else {
       setFilteredNotifications(notifications);
     }
+    */
   }, [profileData, notifications]);
 
   if (loading) {
@@ -144,8 +167,8 @@ const Notification = () => {
         {filteredNotifications.length > 0 ? (
           <div className="space-y-4">
             {filteredNotifications.map((notification, index) => (
-              <div 
-                key={notification._id} 
+              <div
+                key={notification._id}
                 className="card-apple p-6 shadow-apple hover:shadow-apple-lg transition-all duration-300 ease-apple hover-lift group"
               >
                 <div className="flex items-start gap-4">
@@ -156,7 +179,7 @@ const Notification = () => {
                       </span>
                     </div>
                   </div>
-                  
+
                   <div className="flex-grow">
                     <div className="flex items-start justify-between mb-3">
                       <h3 className="app-body font-bold text-brand-primary group-hover:text-apple-blue-600 transition-colors duration-300 font-apple">
@@ -168,17 +191,17 @@ const Notification = () => {
                         </span>
                       </div>
                     </div>
-                    
+
                     <p className="app-body text-apple-gray-700 leading-relaxed mb-4 font-apple">
                       {notification.message}
                     </p>
-                    
+
                     <div className="flex items-center justify-between">
                       <div className="flex items-center app-caption text-apple-gray-500 font-apple">
                         <div className="w-2 h-2 bg-apple-green rounded-full mr-2"></div>
                         <span>New notification</span>
                       </div>
-                      
+
                       <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <button className="text-apple-blue-600 hover:text-brand-primary font-medium app-caption hover-lift font-apple">
                           Mark as read →
@@ -187,7 +210,7 @@ const Notification = () => {
                     </div>
                   </div>
                 </div>
-                
+
               </div>
             ))}
           </div>
