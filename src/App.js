@@ -1,59 +1,70 @@
-import React, { Suspense } from "react";
+import React, { Suspense, lazy } from "react";
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
 
-// Page imports
-import Assignment from "./Pages/Assignment/Assignment";
-import AttendanceOverview from "./Pages/Attendance Overview/AttendanceOverview";
-import Contact from "./Pages/Contact/Contact";
-import ExploreCourses from "./Pages/Explore Courses/ExploreCourses";
-import FreeTest from "./Pages/FreeTest/FreeTest";
-import FreeTestExamPage from "./Pages/FreeTest/FreeTestExamPage";
-import Home from "./Pages/Home/Home";
-import LandingPage from "./Pages/Landing Page/LandingPage";
-import Login from "./Pages/Login/Login";
-import NoticeOverview from "./Pages/Notice Overview/NoticeOverview";
-import Notification from "./Pages/Notification/Notification";
-import PricingPlans from "./Pages/Pricing Plans/PricingPlans";
-import Profile from "./Pages/Profile/Profile";
-import OTPVerify from "./Pages/Register/OTPVerify";
-import Register from "./Pages/Register/Register";
-import Results from "./Pages/Results/Results";
-import Settings from "./Pages/Settings/Settings";
-import BuyNow from "./Pages/Study Store/BuyNow";
-import Checkout from "./Pages/Study Store/Checkout";
-import Delivered from "./Pages/Study Store/Delivered";
-import MyCart from "./Pages/Study Store/My_Cart";
-import MyOrders from "./Pages/Study Store/My_Orders";
-import OrderReview from "./Pages/Study Store/OrderReview";
-import OrderSuccessful from "./Pages/Study Store/OrderSuccessful";
-import StudyStore from "./Pages/Study Store/StudyStore";
-import Privacy from "./Pages/TermandConditions/Privacy";
-import Refund from "./Pages/TermandConditions/Refund";
-import Terms from "./Pages/TermandConditions/Terms";
-
-// Component imports
-import BuyNowPage from "./Components/Course/BuyNowPage";
-import BuyNowPage1 from "./Components/Course/BuyNowPage1";
-import CourseDetails from "./Components/Course/CourseDetails";
-import PurchasedCourses from "./Components/Course/PurchasedCourses";
-import ExamPage from "./Components/Course/Tabs/Test Panel/ExamPage";
-import FinalSubmit from "./Components/Course/Tabs/Test Panel/FinalSubmit";
-import GiveTests from './Components/Course/Tabs/Test Panel/GiveTests';
-import InstructionsDone from './Components/Course/Tabs/Test Panel/InstructionsDone';
-import TestDetails from "./Components/Course/Tabs/Test Panel/TestDetails";
-import AllFreeCourse from "./Components/FreeClass/AllFreeCourse";
-import VideoPlayer from "./Components/VideoPlayer/VideoPlayer";
-
-// Utility imports
+// Utility imports (keep these synchronous - needed immediately)
 import AppProviders from "./Context/AppProviders";
 import AuthRoute from "./utils/AuthRoute";
 import PrivateRoute from "./utils/PrivateRoute";
 
-// Lazy loaded components for better performance
-const Messages = React.lazy(() => import("././Components/Messeges/Messages"));
+// Loading fallback component
+const LoadingFallback = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="text-center">
+      <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
+      <p className="text-gray-600">Loading...</p>
+    </div>
+  </div>
+);
+
+// Lazy load ALL routes for optimal code splitting and performance
+// Only LandingPage is kept synchronous as it's the entry point
+const LandingPage = lazy(() => import("./Pages/Landing Page/LandingPage"));
+
+// Page imports - Lazy loaded
+const Assignment = lazy(() => import("./Pages/Assignment/Assignment"));
+const AttendanceOverview = lazy(() => import("./Pages/Attendance Overview/AttendanceOverview"));
+const Contact = lazy(() => import("./Pages/Contact/Contact"));
+const ExploreCourses = lazy(() => import("./Pages/Explore Courses/ExploreCourses"));
+const FreeTest = lazy(() => import("./Pages/FreeTest/FreeTest"));
+const FreeTestExamPage = lazy(() => import("./Pages/FreeTest/FreeTestExamPage"));
+const Home = lazy(() => import("./Pages/Home/Home"));
+const Login = lazy(() => import("./Pages/Login/Login"));
+const NoticeOverview = lazy(() => import("./Pages/Notice Overview/NoticeOverview"));
+const Notification = lazy(() => import("./Pages/Notification/Notification"));
+const PricingPlans = lazy(() => import("./Pages/Pricing Plans/PricingPlans"));
+const Profile = lazy(() => import("./Pages/Profile/Profile"));
+const OTPVerify = lazy(() => import("./Pages/Register/OTPVerify"));
+const Register = lazy(() => import("./Pages/Register/Register"));
+const Results = lazy(() => import("./Pages/Results/Results"));
+const Settings = lazy(() => import("./Pages/Settings/Settings"));
+const BuyNow = lazy(() => import("./Pages/Study Store/BuyNow"));
+const Checkout = lazy(() => import("./Pages/Study Store/Checkout"));
+const Delivered = lazy(() => import("./Pages/Study Store/Delivered"));
+const MyCart = lazy(() => import("./Pages/Study Store/My_Cart"));
+const MyOrders = lazy(() => import("./Pages/Study Store/My_Orders"));
+const OrderReview = lazy(() => import("./Pages/Study Store/OrderReview"));
+const OrderSuccessful = lazy(() => import("./Pages/Study Store/OrderSuccessful"));
+const StudyStore = lazy(() => import("./Pages/Study Store/StudyStore"));
+const Privacy = lazy(() => import("./Pages/TermandConditions/Privacy"));
+const Refund = lazy(() => import("./Pages/TermandConditions/Refund"));
+const Terms = lazy(() => import("./Pages/TermandConditions/Terms"));
+
+// Component imports - Lazy loaded
+const BuyNowPage = lazy(() => import("./Components/Course/BuyNowPage"));
+const BuyNowPage1 = lazy(() => import("./Components/Course/BuyNowPage1"));
+const CourseDetails = lazy(() => import("./Components/Course/CourseDetails"));
+const PurchasedCourses = lazy(() => import("./Components/Course/PurchasedCourses"));
+const ExamPage = lazy(() => import("./Components/Course/Tabs/Test Panel/ExamPage"));
+const FinalSubmit = lazy(() => import("./Components/Course/Tabs/Test Panel/FinalSubmit"));
+const GiveTests = lazy(() => import('./Components/Course/Tabs/Test Panel/GiveTests'));
+const InstructionsDone = lazy(() => import('./Components/Course/Tabs/Test Panel/InstructionsDone'));
+const TestDetails = lazy(() => import("./Components/Course/Tabs/Test Panel/TestDetails"));
+const AllFreeCourse = lazy(() => import("./Components/FreeClass/AllFreeCourse"));
+const VideoPlayer = lazy(() => import("./Components/VideoPlayer/VideoPlayer"));
+const Messages = lazy(() => import("./Components/Messeges/Messages"));
 
 function App() {
   return (
@@ -72,45 +83,103 @@ function App() {
       />
       <Router>
         <Routes>
-                    <Route path="/" element={<LandingPage />} />
+                    <Route 
+                      path="/" 
+                      element={
+                        <Suspense fallback={LoadingFallback()}>
+                          <LandingPage />
+                        </Suspense>
+                      } 
+                    />
                     {/* Authenticated Routes */}
                     <Route
                       path="/home"
                       element={
                         <PrivateRoute>
-                          <Home />
+                          <Suspense fallback={<LoadingFallback />}>
+                            <Home />
+                          </Suspense>
                         </PrivateRoute>
                       }
                     />
                     <Route
                       path="/explorecourses"
-                      element={<ExploreCourses />}
+                      element={
+                        <Suspense fallback={LoadingFallback()}>
+                          <ExploreCourses />
+                        </Suspense>
+                      }
                     />
                     <Route
                       path="/explorecourses/:id"
-                      element={<CourseDetails />}
+                      element={
+                        <Suspense fallback={LoadingFallback()}>
+                          <CourseDetails />
+                        </Suspense>
+                      }
                     />
 
                     {/* Test Panel start from here */}
 
                     <Route
                       path="/exam-page/:id"
-                      element={<ExamPage />}
+                      element={
+                        <Suspense fallback={LoadingFallback()}>
+                          <ExamPage />
+                        </Suspense>
+                      }
                     />
 
-                    <Route path="/test/:id" element={<TestDetails />} />
+                    <Route 
+                      path="/test/:id" 
+                      element={
+                        <Suspense fallback={LoadingFallback()}>
+                          <TestDetails />
+                        </Suspense>
+                      } 
+                    />
 
-                    <Route path="/give-test/:id" element={<GiveTests />} />
-                    <Route path="/instruction/:id" element={<InstructionsDone />} />
-                    <Route path="/scorecard/:id" element={<FinalSubmit />} />
+                    <Route 
+                      path="/give-test/:id" 
+                      element={
+                        <Suspense fallback={LoadingFallback()}>
+                          <GiveTests />
+                        </Suspense>
+                      } 
+                    />
+                    <Route 
+                      path="/instruction/:id" 
+                      element={
+                        <Suspense fallback={LoadingFallback()}>
+                          <InstructionsDone />
+                        </Suspense>
+                      } 
+                    />
+                    <Route 
+                      path="/scorecard/:id" 
+                      element={
+                        <Suspense fallback={LoadingFallback()}>
+                          <FinalSubmit />
+                        </Suspense>
+                      } 
+                    />
 
                     {/* Test Panel end here */}
-                    <Route path="/free-test" element={<FreeTest />} />
+                    <Route 
+                      path="/free-test" 
+                      element={
+                        <Suspense fallback={LoadingFallback()}>
+                          <FreeTest />
+                        </Suspense>
+                      } 
+                    />
                     <Route
                       path="/free-test/:id"
                       element={
                         <PrivateRoute>
-                          <FreeTestExamPage />
+                          <Suspense fallback={<LoadingFallback />}>
+                            <FreeTestExamPage />
+                          </Suspense>
                         </PrivateRoute>
                       }
                     />
@@ -118,7 +187,9 @@ function App() {
                       path="/pricingplans"
                       element={
                         <PrivateRoute>
-                          <PricingPlans />
+                          <Suspense fallback={<LoadingFallback />}>
+                            <PricingPlans />
+                          </Suspense>
                         </PrivateRoute>
                       }
                     />
@@ -126,20 +197,35 @@ function App() {
                       path="/paymentpage"
                       element={
                         <PrivateRoute>
-                          <BuyNowPage1 />
+                          <Suspense fallback={<LoadingFallback />}>
+                            <BuyNowPage1 />
+                          </Suspense>
                         </PrivateRoute>
                       }
                     />
                     <Route
                       path="/studystore/categories"
-                      element={<StudyStore />}
+                      element={
+                        <Suspense fallback={LoadingFallback()}>
+                          <StudyStore />
+                        </Suspense>
+                      }
                     />
-                    <Route path="/contact" element={<Contact />} />
+                    <Route 
+                      path="/contact" 
+                      element={
+                        <Suspense fallback={LoadingFallback()}>
+                          <Contact />
+                        </Suspense>
+                      } 
+                    />
                     <Route
                       path="/studystore/my_orders"
                       element={
                         <PrivateRoute>
-                          <MyOrders />
+                          <Suspense fallback={<LoadingFallback />}>
+                            <MyOrders />
+                          </Suspense>
                         </PrivateRoute>
                       }
                     />
@@ -147,7 +233,29 @@ function App() {
                       path="/studystore/my_cart"
                       element={
                         <PrivateRoute>
-                          <MyCart />
+                          <Suspense fallback={<LoadingFallback />}>
+                            <MyCart />
+                          </Suspense>
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="/cart"
+                      element={
+                        <PrivateRoute>
+                          <Suspense fallback={<LoadingFallback />}>
+                            <MyCart />
+                          </Suspense>
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="/orders"
+                      element={
+                        <PrivateRoute>
+                          <Suspense fallback={<LoadingFallback />}>
+                            <MyOrders />
+                          </Suspense>
                         </PrivateRoute>
                       }
                     />
@@ -155,7 +263,9 @@ function App() {
                       path="/studystore/delivered"
                       element={
                         <PrivateRoute>
-                          <Delivered />
+                          <Suspense fallback={<LoadingFallback />}>
+                            <Delivered />
+                          </Suspense>
                         </PrivateRoute>
                       }
                     />
@@ -163,7 +273,9 @@ function App() {
                       path="/studystore/books/:id"
                       element={
                         <PrivateRoute>
-                          <BuyNow />
+                          <Suspense fallback={<LoadingFallback />}>
+                            <BuyNow />
+                          </Suspense>
                         </PrivateRoute>
                       }
                     />
@@ -171,7 +283,9 @@ function App() {
                       path="/checkout/:id"
                       element={
                         <PrivateRoute>
-                          <BuyNowPage />
+                          <Suspense fallback={<LoadingFallback />}>
+                            <BuyNowPage />
+                          </Suspense>
                         </PrivateRoute>
                       }
                     />
@@ -179,7 +293,9 @@ function App() {
                       path="/checkout"
                       element={
                         <PrivateRoute>
-                          <Checkout />
+                          <Suspense fallback={<LoadingFallback />}>
+                            <Checkout />
+                          </Suspense>
                         </PrivateRoute>
                       }
                     />
@@ -187,7 +303,9 @@ function App() {
                       path="/mycourses"
                       element={
                         <PrivateRoute>
-                          <PurchasedCourses />
+                          <Suspense fallback={<LoadingFallback />}>
+                            <PurchasedCourses />
+                          </Suspense>
                         </PrivateRoute>
                       }
                     />
@@ -195,7 +313,9 @@ function App() {
                       path="/studystore/categories/buynow/overviewbill"
                       element={
                         <PrivateRoute>
-                          <OrderReview />
+                          <Suspense fallback={<LoadingFallback />}>
+                            <OrderReview />
+                          </Suspense>
                         </PrivateRoute>
                       }
                     />
@@ -203,7 +323,9 @@ function App() {
                       path="/studystore/categories/buynow/overviewbill/ordersuccessful"
                       element={
                         <PrivateRoute>
-                          <OrderSuccessful />
+                          <Suspense fallback={<LoadingFallback />}>
+                            <OrderSuccessful />
+                          </Suspense>
                         </PrivateRoute>
                       }
                     />
@@ -211,7 +333,9 @@ function App() {
                       path="/settings"
                       element={
                         <PrivateRoute>
-                          <Settings />
+                          <Suspense fallback={<LoadingFallback />}>
+                            <Settings />
+                          </Suspense>
                         </PrivateRoute>
                       }
                     />
@@ -219,7 +343,7 @@ function App() {
                       path="/Messages"
                       element={
                         <PrivateRoute>
-                          <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600"></div></div>}>
+                          <Suspense fallback={<LoadingFallback />}>
                             <Messages />
                           </Suspense>
                         </PrivateRoute>
@@ -229,7 +353,9 @@ function App() {
                       path="/profile"
                       element={
                         <PrivateRoute>
-                          <Profile />
+                          <Suspense fallback={<LoadingFallback />}>
+                            <Profile />
+                          </Suspense>
                         </PrivateRoute>
                       }
                     />
@@ -237,7 +363,9 @@ function App() {
                       path="/noticeoverview"
                       element={
                         <PrivateRoute>
-                          <NoticeOverview />
+                          <Suspense fallback={<LoadingFallback />}>
+                            <NoticeOverview />
+                          </Suspense>
                         </PrivateRoute>
                       }
                     />
@@ -245,7 +373,9 @@ function App() {
                       path="/assignment"
                       element={
                         <PrivateRoute>
-                          <Assignment />
+                          <Suspense fallback={<LoadingFallback />}>
+                            <Assignment />
+                          </Suspense>
                         </PrivateRoute>
                       }
                     />
@@ -253,7 +383,9 @@ function App() {
                       path="/results"
                       element={
                         <PrivateRoute>
-                          <Results />
+                          <Suspense fallback={<LoadingFallback />}>
+                            <Results />
+                          </Suspense>
                         </PrivateRoute>
                       }
                     />
@@ -261,7 +393,9 @@ function App() {
                       path="/attendanceoverview"
                       element={
                         <PrivateRoute>
-                          <AttendanceOverview />
+                          <Suspense fallback={<LoadingFallback />}>
+                            <AttendanceOverview />
+                          </Suspense>
                         </PrivateRoute>
                       }
                     />
@@ -269,7 +403,9 @@ function App() {
                       path="/notification"
                       element={
                         <PrivateRoute>
-                          <Notification />
+                          <Suspense fallback={<LoadingFallback />}>
+                            <Notification />
+                          </Suspense>
                         </PrivateRoute>
                       }
                     />
@@ -278,7 +414,9 @@ function App() {
                       path="/register"
                       element={
                         <AuthRoute>
-                          <Register />
+                          <Suspense fallback={<LoadingFallback />}>
+                            <Register />
+                          </Suspense>
                         </AuthRoute>
                       }
                     />
@@ -286,25 +424,64 @@ function App() {
                       path="/otpverify"
                       element={
                         <AuthRoute>
-                          <OTPVerify />
+                          <Suspense fallback={<LoadingFallback />}>
+                            <OTPVerify />
+                          </Suspense>
                         </AuthRoute>
                       }
                     />
-                    <Route path="/allFreeCourses" element={<AllFreeCourse />} />
+                    <Route 
+                      path="/allFreeCourses" 
+                      element={
+                        <Suspense fallback={LoadingFallback()}>
+                          <AllFreeCourse />
+                        </Suspense>
+                      } 
+                    />
 
-                    <Route path="/terms" element={<Terms />} />
-                    <Route path="/privacy" element={<Privacy />} />
-                    <Route path="/refund" element={<Refund />} />
+                    <Route 
+                      path="/terms" 
+                      element={
+                        <Suspense fallback={LoadingFallback()}>
+                          <Terms />
+                        </Suspense>
+                      } 
+                    />
+                    <Route 
+                      path="/privacy" 
+                      element={
+                        <Suspense fallback={LoadingFallback()}>
+                          <Privacy />
+                        </Suspense>
+                      } 
+                    />
+                    <Route 
+                      path="/refund" 
+                      element={
+                        <Suspense fallback={LoadingFallback()}>
+                          <Refund />
+                        </Suspense>
+                      } 
+                    />
 
                     <Route
                       path="/login"
                       element={
                         <AuthRoute>
-                          <Login />
+                          <Suspense fallback={<LoadingFallback />}>
+                            <Login />
+                          </Suspense>
                         </AuthRoute>
                       }
                     />
-                    <Route path="/video/:videoId" element={<VideoPlayer />} />
+                    <Route 
+                      path="/video/:videoId" 
+                      element={
+                        <Suspense fallback={LoadingFallback()}>
+                          <VideoPlayer />
+                        </Suspense>
+                      } 
+                    />
         </Routes>
       </Router>
     </AppProviders>

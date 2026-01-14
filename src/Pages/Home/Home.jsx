@@ -1,21 +1,23 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
-import FreeVideoPlayer from "../../Components/FreeClass/FreeVideoPlayer";
 import { useCourseContext } from "../../Context/CourseContext";
 import "./Home.css";
 
 import "swiper/css";
 import { Autoplay } from "swiper/modules";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense, lazy } from "react";
 import { AiOutlineVideoCamera } from "react-icons/ai";
 import { FaEye } from "react-icons/fa";
 import HOC from "../../Components/HOC/HOC";
 import { useUser } from "../../Context/UserContext";
 import { getOptimizedCourseImage, handleImageError } from "../../utils/imageUtils";
 import ProfileCompletionModal from "../Profile/ProfileCompletionModal";
-import PurchasedCoursesCarousel from "./PurchasedCoursesCarousel";
-import Testimonial from "./Testimonial";
+
+// Lazy load below-the-fold components for better initial load performance
+const FreeVideoPlayer = lazy(() => import("../../Components/FreeClass/FreeVideoPlayer"));
+const PurchasedCoursesCarousel = lazy(() => import("./PurchasedCoursesCarousel"));
+const Testimonial = lazy(() => import("./Testimonial"));
 // Banner imports removed - not needed for dashboard
 
 // Add custom styles for line-clamp and card heights
@@ -99,7 +101,7 @@ const Home = () => {
   // Component rendering optimization
 
   return (
-    <div className="w-full">
+    <div className="w-full max-w-full overflow-x-hidden">
       {/* Hero Section - Light Theme */}
       <div className="relative overflow-hidden gradient-apple-primary rounded-apple-2xl mb-1 mt-1 shadow-apple-lg border border-apple-gray-200">
         <div className="absolute inset-0 opacity-5">
@@ -266,7 +268,25 @@ const Home = () => {
           </div>
         </div>
 
-        <Testimonial />
+        <Suspense fallback={
+          <div className="py-6">
+            <div className="text-center mb-6">
+              <div className="h-8 bg-gray-200 rounded w-1/3 mx-auto mb-2 animate-pulse"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto animate-pulse"></div>
+            </div>
+            <div className="max-w-2xl mx-auto">
+              <div className="card-apple p-6">
+                <div className="animate-pulse space-y-4">
+                  <div className="h-4 bg-gray-200 rounded w-full"></div>
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-32 bg-gray-200 rounded"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        }>
+          <Testimonial />
+        </Suspense>
         
         {/* Call to Action Section */}
         <div className="w-full">

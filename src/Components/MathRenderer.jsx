@@ -78,20 +78,36 @@ const QuestionPartsRenderer = ({ parts, className = "" }) => {
 
 /**
  * Fallback renderer for legacy questions without parts
+ * 🔧 IMPROVEMENT: Always prioritize questionText when available
  */
 const LegacyQuestionRenderer = ({ questionText, tables, className = "" }) => {
-  // Use the same logic as before for backward compatibility
+  // 🔧 FIX: Always prioritize questionText when it's provided and not empty
+  // questionText contains the formatted question with math expressions already processed
   let content = "";
   
-  if (tables && tables.length > 0 && tables[0]) {
+  if (questionText && questionText.trim()) {
+    // questionText is the primary source - it's already formatted and contains math expressions
+    content = questionText;
+  } else if (tables && tables.length > 0 && tables[0]) {
+    // Fallback to tables if questionText is not available
     const tableContent = tables[0];
-    if (tableContent.length < 50 && !tableContent.includes('<') && questionText) {
-      content = questionText;
+    // Try to parse JSON string if it's in that format
+    if (typeof tableContent === 'string' && tableContent.trim().startsWith('[')) {
+      try {
+        const parsed = JSON.parse(tableContent);
+        if (Array.isArray(parsed) && parsed.length >= 2 && parsed[0] === 'Question') {
+          content = parsed[1] || tableContent;
+        } else {
+          content = tableContent;
+        }
+      } catch (e) {
+        content = tableContent;
+      }
     } else {
       content = tableContent;
     }
   } else {
-    content = questionText || "Question content not available";
+    content = "Question content not available";
   }
 
   // Process HTML content with enhanced mathematical expression support

@@ -11,29 +11,56 @@ const HOC = (WrappedComponent) => {
     const [show, setShow] = useState(true);
     const [modalShow, setModalShow] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    
+
     const toggleSidebar = () => {
       setShow(!show);
       setSidebarOpen(!sidebarOpen);
     };
 
     return (
-      <div className="min-h-screen font-apple" style={{background: 'linear-gradient(135deg, #fafafa 0%, #f5f5f5 50%, #f0f0f0 100%)'}}>
+      <div
+        className="min-h-screen font-apple"
+        style={{
+          background:
+            "linear-gradient(135deg, #fafafa 0%, #f5f5f5 50%, #f0f0f0 100%)",
+        }}
+      >
         {/* Main Layout - No Landing Navbar for authenticated pages */}
         <div className="flex h-screen">
-          {/* Sidebar */}
-          <div className={`transition-all duration-300 ease-apple ${show ? 'w-72' : 'w-0'} overflow-hidden flex-shrink-0`}>
-            <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+          {/* Sidebar - Desktop: static in wrapper, Mobile: fixed overlay */}
+          <div
+            className={`transition-all duration-300 ease-apple ${
+              show ? "w-72" : "w-0"
+            } overflow-hidden flex-shrink-0 hidden md:block`}
+          >
+            <Sidebar
+              isOpen={true}
+              setIsOpen={setSidebarOpen}
+              showDesktop={show}
+            />
           </div>
 
+          {/* Mobile Sidebar - Fixed overlay */}
+          <Sidebar
+            isOpen={sidebarOpen}
+            setIsOpen={setSidebarOpen}
+            showDesktop={false}
+          />
+
           {/* Main Content Area */}
-          <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+          <div className="flex-1 flex flex-col overflow-hidden min-w-0 w-full">
             {/* Top Navigation */}
             <Navbar show={show} toggleSidebar={toggleSidebar} />
 
             {/* Content */}
-            <main className="flex-1 overflow-y-auto" style={{background: 'linear-gradient(135deg, #fafafa 0%, #f5f5f5 50%, #f0f0f0 100%)'}}>
-              <div className="p-6 animate-apple-fade-in w-full max-w-none">
+            <main
+              className="flex-1 overflow-y-auto overflow-x-hidden"
+              style={{
+                background:
+                  "linear-gradient(135deg, #fafafa 0%, #f5f5f5 50%, #f0f0f0 100%)",
+              }}
+            >
+              <div className="p-3 sm:p-4 md:p-6 animate-apple-fade-in w-full max-w-full overflow-x-hidden">
                 <WrappedComponent />
               </div>
 
@@ -59,15 +86,15 @@ const HOC = (WrappedComponent) => {
                     © 2024 AKJ Classes. All rights reserved.
                   </p>
                   <div className="flex items-center gap-4">
-                    <button 
+                    <button
                       className="hover:text-apple-gray-700 transition-colors duration-200"
-                      onClick={() => navigate('/terms')}
+                      onClick={() => navigate("/terms")}
                     >
                       Terms & Policy
                     </button>
-                    <button 
+                    <button
                       className="hover:text-apple-gray-700 transition-colors duration-200"
-                      onClick={() => navigate('/privacy')}
+                      onClick={() => navigate("/privacy")}
                     >
                       Privacy Policy
                     </button>
@@ -81,7 +108,7 @@ const HOC = (WrappedComponent) => {
         {/* Chat Modal */}
         {modalShow && (
           <div className="fixed inset-0 z-50 flex items-center justify-center">
-            <div 
+            <div
               className="absolute inset-0 bg-black/40 backdrop-blur-sm"
               onClick={() => setModalShow(false)}
             />

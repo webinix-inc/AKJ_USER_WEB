@@ -6,6 +6,7 @@ import api from "../../api/axios";
 import { usePayment } from "../../Context/PaymentContext";
 import { useSubscription } from "../../Context/SubscriptionContext";
 import { useUser } from "../../Context/UserContext";
+import apiRequestManager from "../../utils/apiRequestManager";
 import Image1 from "../../Image2/LOGO.jpeg";
 import ApplyCouponComponent from "./Coupons/ApplyCoupon";
 import PaymentReceipt from "./PaymentReceipt";
@@ -561,6 +562,15 @@ const BuyNowPage = () => {
           console.log("✅ Course access confirmed!");
           setEnrollmentChecking(false);
           
+          // 🔥 CRITICAL: Clear frontend API cache for user profile to force fresh data
+          try {
+            apiRequestManager.clearCache('/user/getProfile');
+            apiRequestManager.clearCache('GET_/user/getProfile');
+            console.log('🗑️ [CACHE] Cleared frontend API cache for user profile');
+          } catch (cacheError) {
+            console.error('⚠️ [CACHE] Error clearing frontend cache (non-critical):', cacheError);
+          }
+          
           // Clear enrollment status from localStorage
           localStorage.removeItem(`enrollment-checking-${courseId}`);
           
@@ -569,7 +579,7 @@ const BuyNowPage = () => {
             detail: { courseId, success: true } 
           }));
           
-          // Final profile refresh before redirect - this will update userData
+          // Final profile refresh before redirect - this will update userData (force refresh)
           await fetchUserProfile(true);
           
           // 🔥 CRITICAL: Wait for profile to update, then refetch installments

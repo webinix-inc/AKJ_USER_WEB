@@ -381,14 +381,29 @@ export const UserProvider = ({ children }) => {
     try {
       setLoading(true);
       const response = await api.put("/user/updateProfile", updatedUserData);
-      setProfileData(response.data.data); // Update cached profile data
+      
+      // 🔧 FIX: Clear frontend cache for profile endpoint
+      apiRequestManager.clearCache("/user/getProfile");
+      
+      // Update local state immediately with response data
+      setProfileData(response.data.data);
+      
+      // 🔧 FIX: Force refresh profile to get latest data from backend (bypasses all caches)
+      // This ensures we have the most up-to-date data after update
+      try {
+        await fetchUserProfile(true);
+      } catch (refreshError) {
+        // Log but don't fail the update if refresh fails
+        console.warn("⚠️ Profile refresh after update failed:", refreshError);
+      }
+      
       setLoading(false);
       return response.data;
     } catch (error) {
       setLoading(false);
       throw error.response ? error.response.data : error;
     }
-  }, []);
+  }, [fetchUserProfile]);
 
   // Function to upload a profile picture
   const uploadProfilePicture = useCallback(async (file) => {
@@ -403,14 +418,28 @@ export const UserProvider = ({ children }) => {
         },
       });
 
-      setProfileData(response.data.data); // Update cached profile data
+      // 🔧 FIX: Clear frontend cache for profile endpoint
+      apiRequestManager.clearCache("/user/getProfile");
+      
+      // Update local state immediately with response data
+      setProfileData(response.data.data);
+      
+      // 🔧 FIX: Force refresh profile to get latest data from backend (bypasses all caches)
+      // This ensures we have the most up-to-date data after image upload
+      try {
+        await fetchUserProfile(true);
+      } catch (refreshError) {
+        // Log but don't fail the upload if refresh fails
+        console.warn("⚠️ Profile refresh after image upload failed:", refreshError);
+      }
+
       setLoading(false);
       return response.data;
     } catch (error) {
       setLoading(false);
       throw error.response ? error.response.data : error;
     }
-  }, []);
+  }, [fetchUserProfile]);
 
   // Remove the reloadTrigger useEffect since reloadProfile now directly calls fetchUserProfile
 

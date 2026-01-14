@@ -7,11 +7,15 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useUser } from "../../Context/UserContext";
 import "./Sidebar.css";
 
-const Sidebar = ({ isOpen = false, setIsOpen = () => {} }) => {
+const Sidebar = ({
+  isOpen = false,
+  setIsOpen = () => {},
+  showDesktop = true,
+}) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { logout } = useUser();
-  
+
   // Using logo from public folder for better reliability
   const Image1 = "/logo.png";
 
@@ -51,7 +55,8 @@ const Sidebar = ({ isOpen = false, setIsOpen = () => {} }) => {
   ];
 
   const isActiveLink = (link) => {
-    if (link === "/home") return location.pathname === "/home" || location.pathname === "/";
+    if (link === "/home")
+      return location.pathname === "/home" || location.pathname === "/";
     return location.pathname.startsWith(link);
   };
 
@@ -68,9 +73,10 @@ const Sidebar = ({ isOpen = false, setIsOpen = () => {} }) => {
       {/* Sidebar */}
       <div
         className={`h-full w-72 sidebar-apple transform transition-all duration-300 ease-apple animate-apple-slide-in
-          md:translate-x-0 md:static md:block
           ${isOpen ? "translate-x-0" : "-translate-x-full"} 
-          fixed top-0 left-0 z-50 md:z-auto`}
+          fixed top-0 left-0 z-50 
+          md:translate-x-0 md:static md:z-auto
+          ${showDesktop ? "md:block" : "md:hidden"}`}
       >
         {/* Header */}
         <div className="p-6 border-b border-apple-gray-100">
@@ -78,7 +84,7 @@ const Sidebar = ({ isOpen = false, setIsOpen = () => {} }) => {
             {/* Logo centered and clickable */}
             <button
               onClick={() => {
-                navigate('/home');
+                navigate("/home");
                 setIsOpen(false);
               }}
               className="group hover-lift transition-all duration-300 ease-apple"
@@ -89,17 +95,17 @@ const Sidebar = ({ isOpen = false, setIsOpen = () => {} }) => {
                   src={Image1}
                   alt="AKJ Classes"
                   className="w-12 h-12 rounded-apple object-contain group-hover:scale-110 transition-transform duration-300"
-                  style={{ filter: 'brightness(1.1)' }}
+                  style={{ filter: "brightness(1.1)" }}
                   onError={(e) => {
                     // Fallback to a simple text logo if image fails to load
-                    e.target.style.display = 'none';
-                    e.target.nextElementSibling.style.display = 'flex';
+                    e.target.style.display = "none";
+                    e.target.nextElementSibling.style.display = "flex";
                   }}
                 />
                 {/* Fallback text logo */}
-                <div 
+                <div
                   className="w-12 h-12 bg-white rounded-apple flex items-center justify-center text-brand-primary font-bold text-lg shadow-inner"
-                  style={{ display: 'none' }}
+                  style={{ display: "none" }}
                 >
                   A
                 </div>
@@ -110,7 +116,7 @@ const Sidebar = ({ isOpen = false, setIsOpen = () => {} }) => {
                 </p>
               </div>
             </button>
-            
+
             {/* Close button only on mobile - positioned absolutely */}
             <button
               onClick={() => setIsOpen(false)}
@@ -127,7 +133,7 @@ const Sidebar = ({ isOpen = false, setIsOpen = () => {} }) => {
           {sidebarItems.map((item, index) => {
             const isActive = !item.isLogout && isActiveLink(item.link);
             const isLogout = item.isLogout;
-            
+
             return (
               <button
                 key={index}
@@ -138,35 +144,38 @@ const Sidebar = ({ isOpen = false, setIsOpen = () => {} }) => {
                 className={`
                   w-full flex items-center gap-3 px-4 py-3 rounded-apple-lg font-apple text-left
                   transition-all duration-200 ease-apple group hover-lift
-                  ${isActive 
-                    ? 'bg-gradient-to-r from-apple-blue-50 to-apple-blue-100 text-apple-blue-700 shadow-apple-sm border border-apple-blue-200' 
-                    : isLogout
-                    ? 'text-apple-red hover:bg-red-50 hover:text-apple-red'
-                    : 'text-apple-gray-700 hover:bg-apple-gray-50 hover:text-apple-gray-900'
+                  ${
+                    isActive
+                      ? "bg-gradient-to-r from-apple-blue-50 to-apple-blue-100 text-apple-blue-700 shadow-apple-sm border border-apple-blue-200"
+                      : isLogout
+                      ? "text-apple-red hover:bg-red-50 hover:text-apple-red"
+                      : "text-apple-gray-700 hover:bg-apple-gray-50 hover:text-apple-gray-900"
                   }
-                  ${isActive ? 'font-semibold' : 'font-medium'}
+                  ${isActive ? "font-semibold" : "font-medium"}
                 `}
-                aria-current={isActive ? 'page' : undefined}
+                aria-current={isActive ? "page" : undefined}
               >
-                <span className={`
+                <span
+                  className={`
                   transition-colors duration-200 ease-apple
-                  ${isActive 
-                    ? 'text-apple-blue-600' 
-                    : isLogout 
-                    ? 'text-apple-red group-hover:text-apple-red' 
-                    : 'text-apple-gray-500 group-hover:text-apple-gray-700'
+                  ${
+                    isActive
+                      ? "text-apple-blue-600"
+                      : isLogout
+                      ? "text-apple-red group-hover:text-apple-red"
+                      : "text-apple-gray-500 group-hover:text-apple-gray-700"
                   }
-                `}>
-                  {React.cloneElement(item.icon, { 
+                `}
+                >
+                  {React.cloneElement(item.icon, {
                     size: 20,
-                    className: "transition-transform duration-200 ease-apple group-hover:scale-110"
+                    className:
+                      "transition-transform duration-200 ease-apple group-hover:scale-110",
                   })}
                 </span>
-                
-                <span className="text-sm tracking-wide">
-                  {item.text}
-                </span>
-                
+
+                <span className="text-sm tracking-wide">{item.text}</span>
+
                 {isActive && (
                   <div className="ml-auto w-2 h-2 bg-apple-blue-500 rounded-full animate-apple-pulse" />
                 )}

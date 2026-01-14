@@ -58,20 +58,6 @@ const NavbarLanding = () => {
           </div>
         </div>
 
-        {/* Hamburger Icon */}
-        <div className="md:hidden">
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 rounded-apple bg-apple-gray-50 hover:bg-apple-gray-100 transition-all duration-200 ease-apple hover-lift"
-            aria-label="Toggle menu"
-          >
-            {mobileMenuOpen ? 
-              <FaTimes className="text-lg text-apple-gray-700" /> : 
-              <FaBars className="text-lg text-apple-gray-700" />
-            }
-          </button>
-        </div>
-
         {/* Desktop Nav Links */}
         <div className="hidden lg:flex items-center gap-1 mx-6">
           {!isLoggedIn && (
@@ -217,14 +203,32 @@ const NavbarLanding = () => {
               </div>
             </>
           ) : (
-            <button
-              onClick={() => navigate("/login")}
-              className="btn-apple-primary px-4 py-2 text-sm font-medium hover-lift flex items-center gap-2"
-            >
-              <FaUser size={14} />
-              <span>Login/Register</span>
-            </button>
+            <>
+              {/* Desktop Login Button - Hidden on mobile */}
+              <button
+                onClick={() => {
+                  navigate("/login");
+                }}
+                className="hidden lg:flex btn-apple-primary py-2 px-4 text-sm font-medium hover-lift"
+              >
+                Login / Register
+              </button>
+            </>
           )}
+          
+          {/* Hamburger Icon - Moved to right end */}
+          <div className="md:hidden">
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 rounded-apple bg-apple-gray-50 hover:bg-apple-gray-100 transition-all duration-200 ease-apple hover-lift"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? 
+                <FaTimes className="text-lg text-apple-gray-700" /> : 
+                <FaBars className="text-lg text-apple-gray-700" />
+              }
+            </button>
+          </div>
         </div>
       </div>
 

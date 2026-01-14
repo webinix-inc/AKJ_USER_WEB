@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from "react";
 import "./Profile.css";
 import HOC from "../../Components/HOC/HOC";
@@ -7,7 +5,10 @@ import { FiEdit } from "react-icons/fi";
 import { FaUserTie } from "react-icons/fa";
 import { useUser } from "../../Context/UserContext";
 import { validateFileUpload } from "../../utils/security";
-import { getOptimizedUserImage, handleImageError } from "../../utils/imageUtils";
+import {
+  getOptimizedUserImage,
+  handleImageError,
+} from "../../utils/imageUtils";
 import { toast } from "react-toastify";
 
 const Profile = () => {
@@ -41,7 +42,7 @@ const Profile = () => {
   useEffect(() => {
     return () => {
       // Cleanup blob URL on unmount to prevent memory leak
-      if (imagePreview && imagePreview.startsWith('blob:')) {
+      if (imagePreview && imagePreview.startsWith("blob:")) {
         URL.revokeObjectURL(imagePreview);
       }
     };
@@ -54,23 +55,23 @@ const Profile = () => {
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    
+
     if (!file) return;
-    
+
     try {
       // FIX: Validate file before processing to prevent invalid uploads
       validateFileUpload(file);
-      
+
       // FIX: Clean up previous blob URL to prevent memory leak
-      if (selectedImage && imagePreview && imagePreview.startsWith('blob:')) {
+      if (selectedImage && imagePreview && imagePreview.startsWith("blob:")) {
         URL.revokeObjectURL(imagePreview);
       }
-      
+
       setSelectedImage(file);
       setImagePreview(URL.createObjectURL(file));
     } catch (error) {
       toast.error(error.message);
-      e.target.value = ''; // Clear the input on validation error
+      e.target.value = ""; // Clear the input on validation error
     }
   };
 
@@ -78,9 +79,13 @@ const Profile = () => {
     if (!selectedImage) return;
     try {
       await uploadProfilePicture(selectedImage);
+      toast.success("Profile picture uploaded successfully!");
       setSelectedImage(null);
     } catch (error) {
       console.error("Image upload failed:", error);
+      toast.error(
+        error?.message || "Failed to upload profile picture. Please try again."
+      );
     }
   };
 
@@ -91,9 +96,13 @@ const Profile = () => {
   const handleSaveChanges = async () => {
     try {
       await updateUserProfile(profile);
+      toast.success("Profile updated successfully!");
       setIsEditing(false);
     } catch (error) {
       console.error("Profile update failed:", error);
+      toast.error(
+        error?.message || "Failed to update profile. Please try again."
+      );
     }
   };
 
@@ -104,7 +113,10 @@ const Profile = () => {
         <div className="absolute inset-0 bg-black/10 rounded-apple-xl"></div>
         <div className="relative compact-container text-center animate-apple-slide-up">
           <h1 className="app-subtitle text-white mb-2 font-apple">
-            👤 My <span className="bg-gradient-to-r from-teal-400 to-teal-500 bg-clip-text text-transparent">Profile</span>
+            👤 My{" "}
+            <span className="bg-gradient-to-r from-teal-400 to-teal-500 bg-clip-text text-transparent">
+              Profile
+            </span>
           </h1>
           <p className="app-body text-apple-blue-100 max-w-2xl mx-auto font-apple">
             Manage your personal information and account settings
@@ -123,7 +135,11 @@ const Profile = () => {
                 <div className="w-32 h-32 md:w-36 md:h-36 rounded-apple-xl border-4 border-white shadow-apple overflow-hidden bg-white">
                   {imagePreview || profileData?.image ? (
                     <img
-                      src={selectedImage ? imagePreview : getOptimizedUserImage(profileData)}
+                      src={
+                        selectedImage
+                          ? imagePreview
+                          : getOptimizedUserImage(profileData)
+                      }
                       alt="Profile"
                       className="w-full h-full object-cover"
                       onError={(e) => handleImageError(e)}
@@ -140,7 +156,12 @@ const Profile = () => {
                       <div className="w-12 h-12 bg-teal-500 rounded-full flex items-center justify-center shadow-apple hover:bg-teal-600 transition-colors duration-300 hover-lift">
                         <FiEdit size={18} color="white" />
                       </div>
-                      <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="hidden"
+                      />
                     </label>
                   </div>
                 )}
@@ -150,7 +171,9 @@ const Profile = () => {
                 <h2 className="app-title text-white mb-2 font-apple">
                   {profile.firstName} {profile.lastName}
                 </h2>
-                <p className="app-body text-apple-blue-100 mb-4 font-apple">{profile.email}</p>
+                <p className="app-body text-apple-blue-100 mb-4 font-apple">
+                  {profile.email}
+                </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
                   <button
                     onClick={handleEditToggle}
@@ -165,9 +188,22 @@ const Profile = () => {
                   {selectedImage && isEditing && (
                     <button
                       onClick={handleImageUpload}
-                      className="px-6 py-3 btn-apple-accent text-white font-semibold hover-lift shadow-apple font-apple"
+                      className="px-6 py-3 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white font-semibold rounded-apple-lg transition-all duration-300 hover-lift shadow-apple font-apple flex items-center gap-2 transform hover:scale-105 active:scale-95"
                     >
-                      📤 Upload Image
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                        />
+                      </svg>
+                      Upload Image
                     </button>
                   )}
                 </div>
@@ -180,8 +216,10 @@ const Profile = () => {
 
           {/* Profile Form */}
           <div className="p-8">
-            <h3 className="app-body font-bold text-brand-primary mb-6 font-apple">Personal Information</h3>
-            
+            <h3 className="app-body font-bold text-brand-primary mb-6 font-apple">
+              Personal Information
+            </h3>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="app-caption font-semibold text-brand-primary flex items-center gap-2 font-apple">
@@ -191,8 +229,13 @@ const Profile = () => {
                   type="text"
                   name="firstName"
                   value={profile.firstName || ""}
-                  disabled
-                  className="input-apple w-full p-4 bg-apple-gray-50 text-apple-gray-600 font-medium"
+                  onChange={handleChange}
+                  disabled={!isEditing}
+                  className={`input-apple w-full p-4 font-medium transition-all duration-300 ${
+                    !isEditing
+                      ? "bg-apple-gray-50 text-apple-gray-600"
+                      : "bg-white text-brand-primary focus:border-teal-500 focus:shadow-apple"
+                  }`}
                 />
               </div>
 
@@ -204,8 +247,13 @@ const Profile = () => {
                   type="text"
                   name="lastName"
                   value={profile.lastName || ""}
-                  disabled
-                  className="input-apple w-full p-4 bg-apple-gray-50 text-apple-gray-600 font-medium"
+                  onChange={handleChange}
+                  disabled={!isEditing}
+                  className={`input-apple w-full p-4 font-medium transition-all duration-300 ${
+                    !isEditing
+                      ? "bg-apple-gray-50 text-apple-gray-600"
+                      : "bg-white text-brand-primary focus:border-teal-500 focus:shadow-apple"
+                  }`}
                 />
               </div>
 
@@ -220,14 +268,14 @@ const Profile = () => {
                   onChange={handleChange}
                   disabled={!isEditing}
                   className={`input-apple w-full p-4 font-medium transition-all duration-300 ${
-                    !isEditing 
-                      ? "bg-apple-gray-50 text-apple-gray-600" 
+                    !isEditing
+                      ? "bg-apple-gray-50 text-apple-gray-600"
                       : "bg-white text-brand-primary focus:border-teal-500 focus:shadow-apple"
                   }`}
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2 opacity-50">
                 <label className="app-caption font-semibold text-brand-primary flex items-center gap-2 font-apple">
                   📱 Phone Number
                 </label>
@@ -235,8 +283,9 @@ const Profile = () => {
                   type="text"
                   name="phone"
                   value={profile.phone || ""}
-                  disabled
-                  className="input-apple w-full p-4 bg-apple-gray-50 text-apple-gray-600 font-medium"
+                  disabled={true}
+                  readOnly={true}
+                  className="input-apple w-full p-4 bg-apple-gray-50 text-apple-gray-600 font-medium cursor-not-allowed opacity-60"
                 />
               </div>
             </div>
@@ -245,9 +294,25 @@ const Profile = () => {
               <div className="mt-8 flex justify-center">
                 <button
                   onClick={handleSaveChanges}
-                  className="btn-apple-primary px-8 py-4 text-lg font-bold hover-lift shadow-apple font-apple"
+                  className="px-10 py-4 bg-gradient-to-r from-brand-primary via-teal-500 to-teal-600 hover:from-brand-primary hover:via-teal-600 hover:to-teal-700 text-white text-lg font-bold rounded-apple-xl transition-all duration-300 hover-lift shadow-apple font-apple flex items-center gap-3 transform hover:scale-105 active:scale-95 relative overflow-hidden group"
                 >
-                  💾 Save Changes
+                  <span className="relative z-10 flex items-center gap-3">
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    Save Changes
+                  </span>
+                  <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
                 </button>
               </div>
             )}
@@ -255,19 +320,25 @@ const Profile = () => {
         </div>
 
         {/* Additional Info Cards */}
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="card-apple p-6 shadow-apple hover-lift">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 gradient-apple-primary rounded-apple-lg flex items-center justify-center shadow-apple">
                 <span className="text-white text-xl">🎓</span>
               </div>
               <div>
-                <h4 className="app-body font-bold text-brand-primary font-apple">Learning Progress</h4>
-                <p className="app-caption text-apple-gray-600 font-apple">Track your course progress</p>
+                <h4 className="app-body font-bold text-brand-primary font-apple">
+                  Learning Progress
+                </h4>
+                <p className="app-caption text-apple-gray-600 font-apple">
+                  Track your course progress
+                </p>
               </div>
             </div>
             <div className="bg-apple-gray-50 rounded-apple-lg p-4">
-              <p className="app-body text-apple-gray-600 font-apple">Your learning journey continues...</p>
+              <p className="app-body text-apple-gray-600 font-apple">
+                Your learning journey continues...
+              </p>
             </div>
           </div>
 
@@ -277,15 +348,21 @@ const Profile = () => {
                 <span className="text-white text-xl">⚙️</span>
               </div>
               <div>
-                <h4 className="app-body font-bold text-brand-primary font-apple">Account Settings</h4>
-                <p className="app-caption text-apple-gray-600 font-apple">Manage your preferences</p>
+                <h4 className="app-body font-bold text-brand-primary font-apple">
+                  Account Settings
+                </h4>
+                <p className="app-caption text-apple-gray-600 font-apple">
+                  Manage your preferences
+                </p>
               </div>
             </div>
             <div className="bg-apple-gray-50 rounded-apple-lg p-4">
-              <p className="app-body text-apple-gray-600 font-apple">Customize your experience...</p>
+              <p className="app-body text-apple-gray-600 font-apple">
+                Customize your experience...
+              </p>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Layout,
   Typography,
@@ -33,17 +33,88 @@ import "antd/dist/reset.css";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import api from "../../../../api/axios";
 import { notification } from "antd";
-import { getOptimizedQuestionImage, handleQuestionImageError } from "../../../../utils/imageUtils";
+import {
+  getOptimizedQuestionImage,
+  handleQuestionImageError,
+} from "../../../../utils/imageUtils";
 import "./Exampage.css";
 
 const { Header, Content, Footer } = Layout;
+
+// 🔧 NEW: Helper function to parse options from tables array
+const parseOptionsFromTables = (tables) => {
+  if (!tables || !Array.isArray(tables) || tables.length === 0) {
+    return [];
+  }
+
+  const options = [];
+
+  // Parse each table entry - they are JSON strings like "[\"Option\",\"Real roots\",\"Incorrect\"]"
+  tables.forEach((tableItem) => {
+    try {
+      // Check if it's a JSON string
+      if (typeof tableItem === "string" && tableItem.trim().startsWith("[")) {
+        const parsed = JSON.parse(tableItem);
+
+        // Check if it's an Option row: ["Option", "text", "Correct/Incorrect"]
+        if (
+          Array.isArray(parsed) &&
+          parsed.length >= 2 &&
+          parsed[0] === "Option"
+        ) {
+          const optionText = parsed[1] || "";
+          const isCorrect =
+            parsed.length >= 3 && parsed[2]?.toLowerCase() === "correct";
+
+          if (optionText.trim()) {
+            // Generate a unique value for the option (using index + text hash)
+            const optionValue = `option_${options.length}_${optionText
+              .substring(0, 10)
+              .replace(/\s/g, "_")}`;
+
+            options.push({
+              value: optionValue,
+              label: optionText.trim(),
+              isCorrect: isCorrect,
+            });
+          }
+        }
+      } else if (
+        Array.isArray(tableItem) &&
+        tableItem.length >= 2 &&
+        tableItem[0] === "Option"
+      ) {
+        // Already parsed array format
+        const optionText = tableItem[1] || "";
+        const isCorrect =
+          tableItem.length >= 3 && tableItem[2]?.toLowerCase() === "correct";
+
+        if (optionText.trim()) {
+          const optionValue = `option_${options.length}_${optionText
+            .substring(0, 10)
+            .replace(/\s/g, "_")}`;
+
+          options.push({
+            value: optionValue,
+            label: optionText.trim(),
+            isCorrect: isCorrect,
+          });
+        }
+      }
+    } catch (error) {
+      // Skip invalid JSON entries
+      console.warn("Failed to parse table item:", tableItem, error);
+    }
+  });
+
+  return options;
+};
 
 const ExamPage = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState({});
   const [reviewStatus, setReviewStatus] = useState({});
-  const [answeredAndReviewed, setAnsweredAndReviewed] = useState({});
-  const [timeLeft, setTimeLeft] = useState(2 * 60 * 60); // 2-hour timer
+  const [timeLeft, setTimeLeft] = useState(0); // Will be set from scorecard expectedEndTime
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [fullscreenAttempts, setFullscreenAttempts] = useState(0);
   const [showWarning, setShowWarning] = useState(false);
@@ -54,6 +125,7 @@ const ExamPage = () => {
   const [visited, setVisited] = useState({}); // Track visited questions
   const [quizDetails, setQuizDetails] = useState(null); // State for quiz details
   const [selectedOption, setSelectedOption] = useState(null);
+  const [scorecardDetails, setScorecardDetails] = useState(null); // State for scorecard details (expectedEndTime, startTime)
 
   const navigate = useNavigate();
   const isScrollable = totalQuestions > 0;
@@ -63,6 +135,44 @@ const ExamPage = () => {
   const location = useLocation();
   const { scorecardId, folderId } = location.state || {};
 
+  // 🔧 CRITICAL FIX: Define handleConfirmSubmit BEFORE any useEffect hooks that use it
+  // This must be defined early to avoid "Cannot access before initialization" errors
+  const handleConfirmSubmit = useCallback(async () => {
+    if (!scorecardId) {
+      console.error("Cannot submit: scorecardId is missing");
+      return;
+    }
+
+    try {
+      const response = await api.post(`/scorecards/${scorecardId}/finish`);
+      console.log("Quiz submitted successfully:", response.data);
+
+      notification.success({
+        message: "Quiz Submitted",
+        description: "Your test has been successfully submitted.",
+        placement: "topRight",
+      });
+
+      // Navigate to the final submit page with the quizId and scorecardId passed in the location state
+      navigate(`/scorecard/${scorecardId}`, {
+        state: {
+          quizId, // Pass the current quizId
+          scorecardId, // Pass the scorecardId as well
+          folderId, // Pass the folderId
+        },
+      });
+    } catch (error) {
+      console.error("Error submitting quiz:", error);
+      notification.error({
+        message: "Submission Failed",
+        description: "Could not complete the quiz. Please try again.",
+        placement: "topRight",
+      });
+    } finally {
+      setShowSubmitModal(false); // Close the submit modal in any case
+    }
+  }, [scorecardId, quizId, folderId, navigate]);
+
   useEffect(() => {
     // Define the function inside useEffect to prevent re-creation
     const fetchQuizData = async () => {
@@ -71,27 +181,54 @@ const ExamPage = () => {
         const questionsResponse = await api.get(`/quizzes/${quizId}/questions`);
 
         // Map API questions to the frontend structure
-        const formattedQuestions = questionsResponse.data.questions.map(
-          (q) => ({
+        const formattedQuestions = questionsResponse.data.questions.map((q) => {
+          // 🔧 FIX: Parse options from tables if options array is empty
+          let parsedOptions = [];
+
+          if (q.options && q.options.length > 0) {
+            // Use options from the options array if available
+            parsedOptions = q.options.map((option) => ({
+              value: option._id, // Use the correct ObjectId for options
+              label: option.optionText,
+            }));
+          } else if (q.tables && q.tables.length > 0) {
+            // Parse options from tables array when options array is empty
+            parsedOptions = parseOptionsFromTables(q.tables);
+            console.log(
+              `📋 Parsed ${parsedOptions.length} options from tables for question ${q._id}:`,
+              parsedOptions
+            );
+          }
+
+          // Log warning if no options found at all
+          if (parsedOptions.length === 0) {
+            console.warn(
+              `⚠️ No options found for question ${q._id}. Options array:`,
+              q.options,
+              "Tables:",
+              q.tables
+            );
+          }
+
+          return {
             id: q._id, // Use the correct ObjectId from backend (_id)
             // Use both questionText and tables for comprehensive content
-            text: q.tables && q.tables.length > 0 ? q.tables : [q.questionText || "Question text not available"],
+            text:
+              q.tables && q.tables.length > 0
+                ? q.tables
+                : [q.questionText || "Question text not available"],
             questionText: q.questionText, // Keep original text for fallback
             hasImages: q.questionImage && q.questionImage.length > 0,
             questionImage: q.questionImage || [], // Include the actual image data
-            options: q.options.map((option) => ({
-              value: option._id, // Use the correct ObjectId for options
-              label: option.optionText,
-            })),
-          })
-        );
+            options: parsedOptions, // Use parsed options
+          };
+        });
 
         setQuestions(formattedQuestions);
         setTotalQuestions(formattedQuestions.length);
-        
+
         // 🔧 FIX: Initialize visited state for first question
         setVisited({ 0: true });
-        
       } catch (error) {
         console.error("Error fetching quiz data:", error);
         notification.error({
@@ -113,17 +250,113 @@ const ExamPage = () => {
       const questionId = questions[currentQuestion].id;
       const existingAnswer = answers[questionId];
       setSelectedOption(existingAnswer || null);
-      console.log(`📋 Loaded question ${currentQuestion + 1}, existing answer:`, existingAnswer);
+      console.log(
+        `📋 Loaded question ${currentQuestion + 1}, existing answer:`,
+        existingAnswer
+      );
     }
   }, [currentQuestion, questions, answers]);
 
-  // Timer
+  // 🔧 FIX: Fetch scorecard details to get actual quiz duration
   useEffect(() => {
-    const interval = setInterval(() => {
-      setTimeLeft((prev) => Math.max(prev - 1, 0));
+    const fetchScorecardDetails = async () => {
+      if (!scorecardId) {
+        console.warn("⚠️ No scorecardId provided, using default 2-hour timer");
+        return;
+      }
+
+      try {
+        const response = await api.get(`/scorecards/${scorecardId}`);
+        const scorecard = response.data.scorecard;
+        setScorecardDetails(scorecard);
+
+        // Calculate remaining time from expectedEndTime
+        if (scorecard.expectedEndTime) {
+          const expectedEndTime = new Date(scorecard.expectedEndTime);
+          const currentTime = new Date();
+          const remainingSeconds = Math.max(
+            0,
+            Math.floor((expectedEndTime - currentTime) / 1000)
+          );
+
+          console.log(`⏱️ Timer initialized:`, {
+            expectedEndTime: expectedEndTime.toISOString(),
+            currentTime: currentTime.toISOString(),
+            remainingSeconds,
+            formatted: formatTime(remainingSeconds),
+          });
+
+          setTimeLeft(remainingSeconds);
+
+          // If time has already expired, auto-submit
+          if (remainingSeconds === 0) {
+            console.warn("⚠️ Quiz time has expired, auto-submitting...");
+            // Auto-submit will be handled by the timer effect below
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching scorecard details:", error);
+        notification.warning({
+          message: "Timer Warning",
+          description: "Could not fetch quiz duration. Using default timer.",
+        });
+      }
+    };
+
+    fetchScorecardDetails();
+  }, [scorecardId]);
+
+  // 🔧 FIX: Timer that syncs with server time periodically to prevent drift
+  useEffect(() => {
+    if (!scorecardDetails?.expectedEndTime) {
+      // Fallback: use default timer if scorecard not loaded
+      const interval = setInterval(() => {
+        setTimeLeft((prev) => Math.max(prev - 1, 0));
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+
+    let autoSubmitTriggered = false;
+
+    // Sync timer with server time every 30 seconds to prevent drift
+    const syncInterval = setInterval(() => {
+      const expectedEndTime = new Date(scorecardDetails.expectedEndTime);
+      const currentTime = new Date();
+      const remainingSeconds = Math.max(
+        0,
+        Math.floor((expectedEndTime - currentTime) / 1000)
+      );
+      setTimeLeft(remainingSeconds);
+
+      // Check if time expired during sync
+      if (remainingSeconds === 0 && !autoSubmitTriggered) {
+        autoSubmitTriggered = true;
+        console.warn("⏰ Time expired during sync! Auto-submitting quiz...");
+        handleConfirmSubmit();
+      }
+    }, 30000); // Sync every 30 seconds
+
+    // Update timer every second
+    const countdownInterval = setInterval(() => {
+      setTimeLeft((prev) => {
+        const newTime = Math.max(prev - 1, 0);
+
+        // Auto-submit when time runs out
+        if (newTime === 0 && prev > 0 && !autoSubmitTriggered) {
+          autoSubmitTriggered = true;
+          console.warn("⏰ Time expired! Auto-submitting quiz...");
+          handleConfirmSubmit();
+        }
+
+        return newTime;
+      });
     }, 1000);
-    return () => clearInterval(interval);
-  }, []);
+
+    return () => {
+      clearInterval(syncInterval);
+      clearInterval(countdownInterval);
+    };
+  }, [scorecardDetails, handleConfirmSubmit]); // Include handleConfirmSubmit in dependencies
 
   // Format time
   const formatTime = (seconds) => {
@@ -167,19 +400,12 @@ const ExamPage = () => {
   // Toggle review status
   const toggleReview = (questionId) => {
     const isReviewed = reviewStatus[questionId];
-    const isAnswered = !!answers[questionId];
+    const newReviewStatus = !isReviewed;
 
     setReviewStatus({
       ...reviewStatus,
-      [questionId]: !isReviewed,
+      [questionId]: newReviewStatus,
     });
-
-    if (isAnswered && !isReviewed) {
-      setAnsweredAndReviewed({ ...answeredAndReviewed, [questionId]: true });
-    } else if (isReviewed) {
-      const { [questionId]: removed, ...rest } = answeredAndReviewed;
-      setAnsweredAndReviewed(rest);
-    }
   };
 
   // Navigation
@@ -238,31 +464,31 @@ const ExamPage = () => {
 
     // 🔧 FIX: Improved validation and error handling
     if (!currentQuestionId) {
-      notification.error({ 
-        message: "Invalid Question", 
-        description: "Question ID is missing. Please refresh and try again." 
+      notification.error({
+        message: "Invalid Question",
+        description: "Question ID is missing. Please refresh and try again.",
       });
       return;
     }
 
     if (!scorecardId) {
-      notification.error({ 
-        message: "Session Error", 
-        description: "Quiz session is invalid. Please restart the quiz." 
+      notification.error({
+        message: "Session Error",
+        description: "Quiz session is invalid. Please restart the quiz.",
       });
       return;
     }
 
     // 🔧 FIX: Allow navigation without answer for review purposes
     if (!selectedOption) {
-      notification.warning({ 
-        message: "No Answer Selected", 
-        description: "You can review this question later." 
+      notification.warning({
+        message: "No Answer Selected",
+        description: "You can review this question later.",
       });
       // Still allow navigation for review
       setCurrentQuestion(nextIndex);
       setVisited((prev) => ({ ...prev, [nextIndex]: true }));
-      
+
       // Load existing answer for next question
       const nextQuestionId = questions[nextIndex]?.id;
       const existingAnswer = answers[nextQuestionId];
@@ -271,44 +497,47 @@ const ExamPage = () => {
     }
 
     try {
-      const response = await api.post(`/scorecards/${scorecardId}/submit/${currentQuestionId}`, {
-        selectedOptions: [selectedOption],
-      });
-      
+      const response = await api.post(
+        `/scorecards/${scorecardId}/submit/${currentQuestionId}`,
+        {
+          selectedOptions: [selectedOption],
+        }
+      );
+
       // Update state only after successful submission
-      setAnswers(prev => ({
+      setAnswers((prev) => ({
         ...prev,
-        [currentQuestionId]: selectedOption
+        [currentQuestionId]: selectedOption,
       }));
-      
+
       // Move to next question
       setCurrentQuestion(nextIndex);
       setVisited((prev) => ({ ...prev, [nextIndex]: true }));
-      
+
       // Load existing answer for next question
       const nextQuestionId = questions[nextIndex]?.id;
       const existingAnswer = answers[nextQuestionId];
       setSelectedOption(existingAnswer || null);
-      
+
       notification.success({
         message: "Answer Saved",
         description: "Your answer has been saved successfully.",
         duration: 2,
       });
-      
     } catch (error) {
       console.error("❌ Error submitting answer:", error);
-      
-      const errorMessage = error.response?.data?.message || 
-                          error.response?.data?.error || 
-                          "Could not save your answer. Please try again.";
-      
+
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        "Could not save your answer. Please try again.";
+
       notification.error({
         message: "Submission Failed",
         description: errorMessage,
         duration: 4,
       });
-      
+
       // Don't prevent navigation on error - allow user to continue
       console.log("⚠️ Allowing navigation despite submission error");
     }
@@ -319,8 +548,15 @@ const ExamPage = () => {
     const answeredCount = Object.keys(answers).length || 0;
     const markedForReviewCount =
       Object.values(reviewStatus).filter(Boolean).length || 0;
+
+    // 🔧 FIX: Calculate directly from source of truth (answers + reviewStatus)
+    // A question is "answered and marked for review" if it has an answer AND is marked for review
     const answeredAndMarkedForReviewCount =
-      Object.keys(answeredAndReviewed).length || 0;
+      questions.filter((q) => {
+        const isAnswered = !!answers[q.id];
+        const isMarkedForReview = !!reviewStatus[q.id];
+        return isAnswered && isMarkedForReview;
+      }).length || 0;
 
     const notAnsweredCount = totalQuestions - answeredCount; // Questions not answered
     const notVisitedCount = totalQuestions - Object.keys(visited).length; // Questions never visited
@@ -459,37 +695,6 @@ const ExamPage = () => {
       setShowWarning(false);
     } catch (err) {
       console.error("Error returning to test:", err);
-    }
-  };
-
-  const handleConfirmSubmit = async () => {
-    try {
-      const response = await api.post(`/scorecards/${scorecardId}/finish`);
-      console.log("Quiz submitted successfully:", response.data);
-
-      notification.success({
-        message: "Quiz Submitted",
-        description: "Your test has been successfully submitted.",
-        placement: "topRight",
-      });
-
-      // Navigate to the final submit page with the quizId and scorecardId passed in the location state
-      navigate(`/scorecard/${scorecardId}`, {
-        state: {
-          quizId, // Pass the current quizId
-          scorecardId, // Pass the scorecardId as well
-          folderId, // Pass the folderId
-        },
-      });
-    } catch (error) {
-      console.error("Error submitting quiz:", error);
-      notification.error({
-        message: "Submission Failed",
-        description: "Could not complete the quiz. Please try again.",
-        placement: "topRight",
-      });
-    } finally {
-      setShowSubmitModal(false); // Close the submit modal in any case
     }
   };
 
@@ -671,11 +876,15 @@ const ExamPage = () => {
                       padding: "0 12px",
                       height: "30px",
                       borderRadius: "4px",
-                      backgroundColor: reviewStatus[currentQuestion]
+                      backgroundColor: reviewStatus[
+                        questions[currentQuestion]?.id
+                      ]
                         ? "#1890ff"
                         : "#fff",
-                      color: reviewStatus[currentQuestion] ? "#fff" : "#000",
-                      border: reviewStatus[currentQuestion]
+                      color: reviewStatus[questions[currentQuestion]?.id]
+                        ? "#fff"
+                        : "#000",
+                      border: reviewStatus[questions[currentQuestion]?.id]
                         ? "1px solid #1890ff"
                         : "1px solid #d9d9d9",
                       cursor: "pointer",
@@ -683,18 +892,23 @@ const ExamPage = () => {
                       alignItems: "center", // Align content vertically
                       gap: "8px", // Space between icon and text
                     }}
-                    onClick={() => toggleReview(currentQuestion)}
+                    onClick={() => {
+                      const currentQuestionId = questions[currentQuestion]?.id;
+                      if (currentQuestionId) {
+                        toggleReview(currentQuestionId);
+                      }
+                    }}
                   >
                     <AiOutlineEye
                       style={{
                         fontSize: "18px",
-                        color: reviewStatus[currentQuestion]
+                        color: reviewStatus[questions[currentQuestion]?.id]
                           ? "#fff"
                           : "#1890ff", // Dynamically adjust icon color
                       }}
                     />
                     <span>
-                      {reviewStatus[currentQuestion]
+                      {reviewStatus[questions[currentQuestion]?.id]
                         ? "Unmark"
                         : "Mark for Review"}
                     </span>
@@ -717,89 +931,146 @@ const ExamPage = () => {
                 <>
                   {questions[currentQuestion] ? (
                     <>
-                      {/* 🔧 NEW: Use QuestionRenderer for LaTeX support */}
+                      {/* 🔧 IMPROVEMENT: Display questionText directly (it contains the full formatted question) */}
+                      {/* questionText is the primary source - it already contains formatted content with math expressions */}
                       <Typography.Text>
-                        <QuestionRenderer 
+                        <QuestionRenderer
                           question={{
-                            ...questions[currentQuestion],
-                            // Map legacy structure for compatibility
+                            // Always prioritize questionText for display - it's the formatted question content
+                            questionText:
+                              questions[currentQuestion].questionText ||
+                              "Question text not available",
+                            // Don't pass parts when questionText exists - this forces LegacyQuestionRenderer
+                            // which will properly display the questionText with math rendering
+                            parts: questions[currentQuestion].questionText
+                              ? undefined
+                              : questions[currentQuestion].parts || undefined,
+                            // Keep tables for fallback only (options and solution come from tables)
                             tables: questions[currentQuestion].text,
-                            questionText: questions[currentQuestion].questionText,
-                            questionImage: questions[currentQuestion].questionImage
+                            questionImage:
+                              questions[currentQuestion].questionImage || [],
                           }}
                         />
                       </Typography.Text>
 
                       {/* 🔧 NEW: Display question images if available */}
-                      {questions[currentQuestion]?.hasImages && questions[currentQuestion]?.questionImage?.length > 0 && (
-                        <div style={{ marginTop: "16px", marginBottom: "16px" }}>
-                          {questions[currentQuestion].questionImage.map((imageUrl, index) => {
-                            const optimizedUrl = getOptimizedQuestionImage(imageUrl);
-                            
-                            if (!optimizedUrl) {
-                              return null;
-                            }
-                            
-                            return (
-                              <img
-                                key={index}
-                                src={optimizedUrl}
-                                alt={`Question ${currentQuestion + 1} - Image ${index + 1}`}
-                                style={{
-                                  maxWidth: "100%",
-                                  height: "auto",
-                                  borderRadius: "8px",
-                                  marginBottom: index < questions[currentQuestion].questionImage.length - 1 ? "8px" : "0",
-                                  border: "1px solid #d9d9d9",
-                                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
-                                }}
-                                crossOrigin="anonymous"
-                                onError={(e) => handleQuestionImageError(e, imageUrl)}
-                                onLoad={() => console.log('Quiz question image loaded successfully:', optimizedUrl)}
-                              />
-                            );
-                          })}
-                        </div>
-                      )}
+                      {questions[currentQuestion]?.hasImages &&
+                        questions[currentQuestion]?.questionImage?.length >
+                          0 && (
+                          <div
+                            style={{ marginTop: "16px", marginBottom: "16px" }}
+                          >
+                            {questions[currentQuestion].questionImage.map(
+                              (imageUrl, index) => {
+                                const optimizedUrl =
+                                  getOptimizedQuestionImage(imageUrl);
 
-                      <Radio.Group
-                        onChange={(e) =>
-                          handleAnswerChange(
-                            questions[currentQuestion]?.id,
-                            e.target.value
-                          )
-                        } // Use valid questionId
-                        value={selectedOption} // 🔧 FIX: Use selectedOption for immediate visual feedback
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "10px",
-                          marginTop: "16px",
-                        }}
-                      >
-                        {questions[currentQuestion]?.options.map(
-                          (option, idx) => (
-                            <Radio 
-                              key={idx} 
-                              value={option.value}
-                              style={{
-                                padding: "8px 12px",
-                                border: selectedOption === option.value ? "2px solid #1890ff" : "1px solid #d9d9d9",
-                                borderRadius: "6px",
-                                backgroundColor: selectedOption === option.value ? "#f0f8ff" : "transparent",
-                                transition: "all 0.3s ease"
-                              }}
-                            >
-                              <span style={{ 
-                                fontWeight: selectedOption === option.value ? "600" : "normal",
-                                color: selectedOption === option.value ? "#1890ff" : "inherit"
-                              }}>
-                                {selectedOption === option.value && "✓ "}{option.label}
-                              </span>
-                            </Radio>
-                          )
+                                if (!optimizedUrl) {
+                                  return null;
+                                }
+
+                                return (
+                                  <img
+                                    key={index}
+                                    src={optimizedUrl}
+                                    alt={`Question ${
+                                      currentQuestion + 1
+                                    } - Image ${index + 1}`}
+                                    style={{
+                                      maxWidth: "100%",
+                                      height: "auto",
+                                      borderRadius: "8px",
+                                      marginBottom:
+                                        index <
+                                        questions[currentQuestion].questionImage
+                                          .length -
+                                          1
+                                          ? "8px"
+                                          : "0",
+                                      border: "1px solid #d9d9d9",
+                                      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                                    }}
+                                    crossOrigin="anonymous"
+                                    onError={(e) =>
+                                      handleQuestionImageError(e, imageUrl)
+                                    }
+                                    onLoad={() =>
+                                      console.log(
+                                        "Quiz question image loaded successfully:",
+                                        optimizedUrl
+                                      )
+                                    }
+                                  />
+                                );
+                              }
+                            )}
+                          </div>
                         )}
-                      </Radio.Group>
+
+                      {/* 🔧 FIX: Render options with proper handling for empty arrays */}
+                      {questions[currentQuestion]?.options &&
+                      questions[currentQuestion].options.length > 0 ? (
+                        <Radio.Group
+                          onChange={(e) =>
+                            handleAnswerChange(
+                              questions[currentQuestion]?.id,
+                              e.target.value
+                            )
+                          } // Use valid questionId
+                          value={selectedOption} // 🔧 FIX: Use selectedOption for immediate visual feedback
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "10px",
+                            marginTop: "16px",
+                          }}
+                        >
+                          {questions[currentQuestion].options.map(
+                            (option, idx) => (
+                              <Radio
+                                key={idx}
+                                value={option.value}
+                                style={{
+                                  padding: "8px 12px",
+                                  border:
+                                    selectedOption === option.value
+                                      ? "2px solid #1890ff"
+                                      : "1px solid #d9d9d9",
+                                  borderRadius: "6px",
+                                  backgroundColor:
+                                    selectedOption === option.value
+                                      ? "#f0f8ff"
+                                      : "transparent",
+                                  transition: "all 0.3s ease",
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    fontWeight:
+                                      selectedOption === option.value
+                                        ? "600"
+                                        : "normal",
+                                    color:
+                                      selectedOption === option.value
+                                        ? "#1890ff"
+                                        : "inherit",
+                                  }}
+                                >
+                                  {selectedOption === option.value && "✓ "}
+                                  {option.label}
+                                </span>
+                              </Radio>
+                            )
+                          )}
+                        </Radio.Group>
+                      ) : (
+                        <Alert
+                          message="No Options Available"
+                          description="This question does not have any options to select from. Please contact support if this is unexpected."
+                          type="warning"
+                          style={{ marginTop: "16px" }}
+                        />
+                      )}
                     </>
                   ) : (
                     <Typography.Text type="secondary">
@@ -825,7 +1096,9 @@ const ExamPage = () => {
                 Previous
               </Button>
               <Button
-                disabled={!scorecardId || currentQuestion >= questions.length - 1}
+                disabled={
+                  !scorecardId || currentQuestion >= questions.length - 1
+                }
                 type="primary"
                 onClick={() => navigateQuestion(currentQuestion + 1)}
                 loading={loading}
@@ -855,6 +1128,7 @@ const ExamPage = () => {
                 <Col span={12} style={{ textAlign: "center" }}>
                   <Badge
                     count={notAnsweredCount}
+                    showZero={true}
                     style={{
                       background:
                         "linear-gradient(to bottom, #ff4d4f, #ff7875)",
@@ -882,6 +1156,7 @@ const ExamPage = () => {
                 <Col span={12} style={{ textAlign: "center" }}>
                   <Badge
                     count={answeredCount}
+                    showZero={true}
                     style={{
                       background:
                         "linear-gradient(to bottom, #52b062, #52b062)",
@@ -906,6 +1181,7 @@ const ExamPage = () => {
                 <Col span={12} style={{ textAlign: "center" }}>
                   <Badge
                     count={markedForReviewCount}
+                    showZero={true}
                     style={{
                       background:
                         "linear-gradient(to bottom, #745195, #745195)",
@@ -928,6 +1204,7 @@ const ExamPage = () => {
                 <Col span={12} style={{ textAlign: "center" }}>
                   <Badge
                     count={answeredAndMarkedForReviewCount}
+                    showZero={true}
                     style={{
                       background: "white",
                       color: "#000000",
@@ -935,9 +1212,9 @@ const ExamPage = () => {
                       height: "50px",
                       width: "50px",
                       lineHeight: "50px",
-
+                      borderRadius: "50%",
                       boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
-                      border: "none",
+                      border: "1px solid #d9d9d9",
                     }}
                   />
                   <Typography.Text
@@ -951,6 +1228,7 @@ const ExamPage = () => {
                 <Col span={24} style={{ textAlign: "center" }}>
                   <Badge
                     count={notVisitedCount}
+                    showZero={true}
                     style={{
                       background:
                         "linear-gradient(to bottom, #ffffff, #ffffff)",
@@ -961,7 +1239,7 @@ const ExamPage = () => {
                       lineHeight: "50px",
                       borderRadius: "50%",
                       boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
-                      border: "none",
+                      border: "1px solid #d9d9d9",
                     }}
                   />
                   <Typography.Text
@@ -1004,7 +1282,7 @@ const ExamPage = () => {
                 >
                   {questions.map((question, index) => {
                     const isAnswered = !!answers[question.id]; // ✅ Check if answered
-                    const isMarkedForReview = !!reviewStatus[index]; // 🟣 Check if marked (use index, not question.id)
+                    const isMarkedForReview = !!reviewStatus[question.id]; // 🟣 Check if marked (FIXED: use question.id, not index)
                     const isVisited = !!visited[index]; // 🟠 Check if visited
                     const isCurrent = index === currentQuestion; // 🔵 Current question
                     const isAnsweredAndMarked = isAnswered && isMarkedForReview; // 🔵 Both
@@ -1038,20 +1316,27 @@ const ExamPage = () => {
                           height: "40px",
                           width: "40px",
                           fontWeight: "bold",
-                          border: isCurrent ? "2px solid #096dd9" : "1px solid #d9d9d9",
+                          border: isCurrent
+                            ? "2px solid #096dd9"
+                            : "1px solid #d9d9d9",
                           borderRadius: "4px",
                           transition: "all 0.2s ease",
                         }}
                         onClick={() => {
-                          console.log(`🔄 Navigating to question ${index + 1} via grid`);
+                          console.log(
+                            `🔄 Navigating to question ${index + 1} via grid`
+                          );
                           setCurrentQuestion(index);
-                          setVisited(prev => ({ ...prev, [index]: true }));
-                          
+                          setVisited((prev) => ({ ...prev, [index]: true }));
+
                           // Load existing answer for the selected question
                           const questionId = questions[index]?.id;
                           const existingAnswer = answers[questionId];
                           setSelectedOption(existingAnswer || null);
-                          console.log(`🔄 Grid navigation - loaded existing answer for question ${questionId}:`, existingAnswer);
+                          console.log(
+                            `🔄 Grid navigation - loaded existing answer for question ${questionId}:`,
+                            existingAnswer
+                          );
                         }}
                         onMouseEnter={(e) => {
                           if (!isCurrent) {

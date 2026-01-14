@@ -24,3 +24,28 @@
     filter: blur(10px);
     pointer-events: none;
 }
+
+/* Scorecard Table Row Styling */
+.row-correct {
+    background-color: #f6ffed !important;
+}
+
+.row-correct:hover {
+    background-color: #d9f7be !important;
+}
+
+.row-incorrect {
+    background-color: #fff1f0 !important;
+}
+
+.row-incorrect:hover {
+    background-color: #ffccc7 !important;
+}
+
+.row-unattempted {
+    background-color: #fffbe6 !important;
+}
+
+.row-unattempted:hover {
+    background-color: #ffe58f !important;
+}

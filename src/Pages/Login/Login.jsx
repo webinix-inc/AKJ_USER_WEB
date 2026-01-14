@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import "./Login.css";
 import "react-phone-input-2/lib/style.css";
 import PhoneInput from "react-phone-input-2";
-import { CgCloseR } from "react-icons/cg";
 import { useNavigate } from "react-router-dom";
 import img from "../../Image2/img12.png";
 import { useUser } from "../../Context/UserContext";
@@ -10,6 +9,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { validatePhoneNumber } from "../../utils/security";
 import { ERROR_MESSAGES } from "../../utils/constants";
+import NavbarLanding from "../Landing Page/NavbarLanding";
 
 const Login = () => {
   const [phone, setPhone] = useState("");
@@ -51,32 +51,31 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen font-apple flex flex-col md:flex-row items-center justify-center" style={{background: 'linear-gradient(135deg, #fafafa 0%, #f5f5f5 50%, #f0f0f0 100%)'}}>
-      {/* Left Side - Hero Section */}
-      <div className="relative h-auto w-full md:w-1/2 flex flex-col items-center justify-center gradient-apple-primary rounded-apple-2xl md:rounded-l-2xl md:rounded-r-none">
-        <button
-          onClick={() => navigate("/")}
-          className="absolute top-6 right-6 z-10 w-10 h-10 bg-apple-gray-200 rounded-full flex items-center justify-center hover:bg-apple-gray-300 transition-all duration-300 hover-lift"
-          aria-label="Go back to home"
-        >
-          <CgCloseR color="#374151" size={24} />
-        </button>
-        
-        <div className="text-center p-8 animate-apple-slide-up">
-          <h2 className="app-title text-apple-gray-800 mb-4">Welcome Back!</h2>
-          <p className="app-body text-apple-gray-600 mb-8">Continue your learning journey with us</p>
-          <div className="w-20 h-1 gradient-apple-accent rounded-full mx-auto"></div>
-        </div>
-        
-        <img
-          src={img}
-          alt="Login"
-          className="w-full max-w-md hidden sm:block object-contain opacity-90 animate-apple-fade-in"
-        />
-      </div>
+    <div className="min-h-screen font-apple" style={{background: 'linear-gradient(135deg, #fafafa 0%, #f5f5f5 50%, #f0f0f0 100%)'}}>
+      {/* Landing Page Navbar */}
+      <NavbarLanding />
 
-      {/* Right Side - Login Form */}
-      <div className="w-full md:w-1/2 flex flex-col items-center justify-center px-8 py-12 card-apple rounded-apple-2xl md:rounded-r-2xl md:rounded-l-none shadow-apple-lg">
+      {/* Main Content with padding for fixed navbar */}
+      <div className="pt-20 pb-8 flex flex-col md:flex-row items-center justify-center min-h-screen">
+        {/* Left Side - Hero Section */}
+        <div className="relative h-auto w-full md:w-1/2 flex flex-col items-center justify-center gradient-apple-primary rounded-apple-2xl md:rounded-l-2xl md:rounded-r-none min-h-[500px] md:min-h-[600px] mx-4 my-4">
+          <div className="text-center p-6 md:p-8 animate-apple-slide-up">
+            <h2 className="app-title text-apple-gray-800 mb-4">Welcome Back!</h2>
+            <p className="app-body text-apple-gray-600 mb-6 md:mb-8">Continue your learning journey with us</p>
+            <div className="w-20 h-1 gradient-apple-accent rounded-full mx-auto"></div>
+          </div>
+          
+          <div className="flex-1 flex items-center justify-center w-full p-4 md:p-8">
+            <img
+              src={img}
+              alt="Login"
+              className="w-full max-w-lg object-contain opacity-90 animate-apple-fade-in"
+            />
+          </div>
+        </div>
+
+        {/* Right Side - Login Form */}
+        <div className="w-full md:w-1/2 flex flex-col items-center justify-center px-6 md:px-8 py-8 md:py-12 card-apple rounded-apple-2xl md:rounded-r-2xl md:rounded-l-none shadow-apple-lg mx-4 my-4">
         <div className="text-center mb-8 w-full max-w-md animate-apple-slide-up">
           <h3 className="app-title text-brand-primary mb-3">Sign In</h3>
           <p className="app-body text-apple-gray-600">
@@ -165,6 +164,7 @@ const Login = () => {
               Privacy Policy
             </button>
           </p>
+        </div>
         </div>
       </div>
     </div>

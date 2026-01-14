@@ -1,5 +1,10 @@
 import React from "react";
-import { FaArrowRight, FaGraduationCap, FaUsers, FaTrophy } from "react-icons/fa";
+import {
+  FaArrowRight,
+  FaGraduationCap,
+  FaUsers,
+  FaTrophy,
+} from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import ImportantLinkSection from "./ImportantLinkSection";
 
@@ -10,12 +15,15 @@ const UnlockYourPotential = () => {
     <div className="relative bg-gradient-to-br from-white to-apple-gray-50 overflow-hidden">
       {/* Subtle Background Pattern */}
       <div className="absolute inset-0 opacity-5">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23023d50' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          backgroundSize: '60px 60px'
-        }}></div>
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23023d50' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            backgroundSize: "60px 60px",
+          }}
+        ></div>
       </div>
-      
+
       <div className="relative z-10 w-full px-6 compact-hero">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
           {/* Text Content */}
@@ -27,25 +35,23 @@ const UnlockYourPotential = () => {
                   🎓 Since 1974 - Sign of Success
                 </span>
               </div>
-              
+
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight font-apple">
-                <span className="block text-brand-primary">
-                  Unlock Your
-                </span>
-                <span className="block text-brand-accent">
-                  Potential
-                </span>
+                <span className="block text-brand-primary">Unlock Your</span>
+                <span className="block text-brand-accent">Potential</span>
               </h1>
-              
+
               <p className="app-body text-apple-gray-600 leading-relaxed max-w-2xl font-apple">
-                Transform your future with expert-designed courses. Master every concept, ace every exam, and achieve your dreams with confidence.
+                Transform your future with expert-designed courses. Master every
+                concept, ace every exam, and achieve your dreams with
+                confidence.
               </p>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3">
               <button
                 onClick={() => navigate("/register")}
-                className="btn-apple-primary px-6 py-3 app-caption font-semibold hover-lift shadow-apple flex items-center justify-center gap-2 group"
+                className="btn-apple-primary px-6 py-3  font-semibold hover-lift shadow-apple flex items-center justify-center gap-2 group "
               >
                 Start Learning Today
                 <FaArrowRight className="text-sm group-hover:translate-x-1 transition-transform duration-300 ease-apple" />
@@ -69,8 +75,12 @@ const UnlockYourPotential = () => {
                     <span className="text-xs font-bold text-white">+</span>
                   </div>
                 </div>
-                <div className="app-caption font-bold text-brand-primary font-apple">10K+</div>
-                <div className="app-small text-apple-gray-600 font-medium">Happy Students</div>
+                <div className="app-caption font-bold text-brand-primary font-apple">
+                  10K+
+                </div>
+                <div className="app-small text-apple-gray-600 font-medium">
+                  Happy Students
+                </div>
               </div>
               <div className="text-center group">
                 <div className="relative mb-2">
@@ -81,8 +91,12 @@ const UnlockYourPotential = () => {
                     <span className="text-xs font-bold text-white">★</span>
                   </div>
                 </div>
-                <div className="app-caption font-bold text-brand-primary font-apple">50+</div>
-                <div className="app-small text-apple-gray-600 font-medium">Expert Courses</div>
+                <div className="app-caption font-bold text-brand-primary font-apple">
+                  50+
+                </div>
+                <div className="app-small text-apple-gray-600 font-medium">
+                  Expert Courses
+                </div>
               </div>
               <div className="text-center group">
                 <div className="relative mb-2">
@@ -93,8 +107,12 @@ const UnlockYourPotential = () => {
                     <span className="text-xs font-bold text-white">✓</span>
                   </div>
                 </div>
-                <div className="app-caption font-bold text-brand-primary font-apple">95%</div>
-                <div className="app-small text-apple-gray-600 font-medium">Success Rate</div>
+                <div className="app-caption font-bold text-brand-primary font-apple">
+                  95%
+                </div>
+                <div className="app-small text-apple-gray-600 font-medium">
+                  Success Rate
+                </div>
               </div>
             </div>
           </div>
@@ -106,7 +124,7 @@ const UnlockYourPotential = () => {
               <div className="absolute -bottom-1 -right-1 w-3 h-3 gradient-apple-primary rounded-apple rotate-12"></div>
               <ImportantLinkSection />
             </div>
-            
+
             {/* Clean Floating Elements */}
             <div className="absolute -top-3 right-3 w-8 h-8 gradient-apple-accent rounded-full flex items-center justify-center shadow-apple animate-apple-bounce">
               <span className="text-sm">🚀</span>
@@ -116,7 +134,6 @@ const UnlockYourPotential = () => {
           </div>
         </div>
       </div>
-      
     </div>
   );
 };

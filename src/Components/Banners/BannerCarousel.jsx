@@ -29,12 +29,8 @@ const BannerCarousel = ({ banners = [], loading = false, onBannerClick }) => {
 
   return (
     <div className="relative w-full overflow-hidden bg-gradient-to-br from-teal-50 to-blue-50 rounded-apple-lg shadow-apple">
-      {/* Adaptive height container */}
-      <div className="relative w-full" style={{ 
-        minHeight: '200px',
-        maxHeight: '400px',
-        height: 'auto'
-      }}>
+      {/* Fixed height container for full coverage */}
+      <div className="relative w-full banner-container">
         <Swiper
           spaceBetween={0}
           slidesPerView={1}
@@ -58,17 +54,17 @@ const BannerCarousel = ({ banners = [], loading = false, onBannerClick }) => {
           
           return (
             <SwiperSlide key={b._id || i}>
-              <div className="relative w-full group">
+              <div className="relative w-full h-full group">
                 <button
                   onClick={() => onBannerClick?.(b)}
-                  className="block w-full relative overflow-hidden rounded-apple-lg"
+                  className="block w-full h-full relative overflow-hidden"
                   style={{ cursor: (b.course || b.externalLink) ? "pointer" : "default" }}
                   aria-label={b.name || b.title || `banner-${i}`}
                 >
                   <img
                     src={src}
                     alt={b.alt || b.name || b.title || `banner-${i}`}
-                    className="w-full h-auto object-contain transition-all duration-500 group-hover:scale-105 rounded-apple-lg"
+                    className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105"
                     crossOrigin="anonymous"
                     loading="lazy"
                     onError={(e) => {
@@ -77,33 +73,11 @@ const BannerCarousel = ({ banners = [], loading = false, onBannerClick }) => {
                       const placeholder = e.currentTarget.nextElementSibling;
                       if (placeholder) placeholder.style.display = 'flex';
                     }}
-                    onLoad={(e) => {
-                      // Ensure proper aspect ratio
-                      const img = e.currentTarget;
-                      const container = img.closest('.relative');
-                      if (container && img.naturalHeight > 0) {
-                        const aspectRatio = img.naturalWidth / img.naturalHeight;
-                        const containerWidth = container.offsetWidth;
-                        const calculatedHeight = containerWidth / aspectRatio;
-                        
-                        // Set reasonable height limits
-                        const minHeight = 200;
-                        const maxHeight = 400;
-                        const finalHeight = Math.max(minHeight, Math.min(maxHeight, calculatedHeight));
-                        
-                        container.style.height = `${finalHeight}px`;
-                      }
-                    }}
-                    style={{
-                      backgroundColor: '#f8f9fa',
-                      minHeight: '200px',
-                      maxHeight: '400px'
-                    }}
                   />
                   
                   {/* Fallback placeholder */}
                   <div 
-                    className="absolute inset-0 bg-gradient-to-br from-teal-100 to-blue-100 flex items-center justify-center rounded-apple-lg"
+                    className="absolute inset-0 bg-gradient-to-br from-teal-100 to-blue-100 flex items-center justify-center"
                     style={{ display: 'none' }}
                   >
                     <div className="text-center text-teal-600">
@@ -117,7 +91,7 @@ const BannerCarousel = ({ banners = [], loading = false, onBannerClick }) => {
                   </div>
                   
                   {/* Hover Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-teal-900/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-apple-lg" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-teal-900/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300" />
                   
                   {/* Click indicator */}
                   {(b.course || b.externalLink) && (
