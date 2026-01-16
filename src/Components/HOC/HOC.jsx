@@ -48,19 +48,20 @@ const HOC = (WrappedComponent) => {
           />
 
           {/* Main Content Area */}
-          <div className="flex-1 flex flex-col overflow-hidden min-w-0 w-full">
+          <div className="flex-1 flex flex-col  min-w-0 w-full">
             {/* Top Navigation */}
             <Navbar show={show} toggleSidebar={toggleSidebar} />
 
             {/* Content */}
             <main
-              className="flex-1 overflow-y-auto overflow-x-hidden"
+              className="flex-1 "
               style={{
                 background:
                   "linear-gradient(135deg, #fafafa 0%, #f5f5f5 50%, #f0f0f0 100%)",
+                touchAction: "pan-y",
               }}
             >
-              <div className="p-3 sm:p-4 md:p-6 animate-apple-fade-in w-full max-w-full overflow-x-hidden">
+              <div className="p-3 sm:p-4 md:p-6 animate-apple-fade-in w-full max-w-full">
                 <WrappedComponent />
               </div>
 

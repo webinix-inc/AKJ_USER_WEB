@@ -9,7 +9,6 @@ import {
   Row,
   Col,
   Badge,
-  Modal,
   message,
   Spin,
 } from "antd";
@@ -28,12 +27,9 @@ const Instruction = () => {
   const quizId = id;
   const { fetchUserProfile, profileData, loading: userLoading } = useUser(); // Fetch user profile using context
   const [quizDetails, setQuizDetails] = useState(null); // State to store quiz details
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(15); // Countdown timer
   const [isCheckboxChecked, setIsCheckboxChecked] = useState(false); // Checkbox state
   const [loading, setLoading] = useState(false); // Button loading state
   const [loadingQuiz, setLoadingQuiz] = useState(true); // Loading state for quiz details
-  let timerRef = null;
 
   const location = useLocation();
   const folderId = location.state?.folderId; // Get folderId from location state
@@ -59,7 +55,11 @@ const Instruction = () => {
   }, [quizId]);
 
   const formatDuration = (duration) => {
-    if (typeof duration === "object" && duration.hours !== undefined && duration.minutes !== undefined) {
+    if (
+      typeof duration === "object" &&
+      duration.hours !== undefined &&
+      duration.minutes !== undefined
+    ) {
       return `${duration.hours} hr ${duration.minutes} min`;
     }
     return "N/A";
@@ -76,22 +76,13 @@ const Instruction = () => {
         message.success(
           `Quiz started! Duration: ${durationMinutes} minutes, Attempt: ${attemptNumber}`
         );
-        setIsModalVisible(true);
 
-        // Start countdown before navigating
-        let countdown = 15;
-        timerRef = setInterval(() => {
-          countdown -= 1;
-          setTimeLeft(countdown);
-
-          if (countdown === 0) {
-            clearInterval(timerRef);
-            setIsModalVisible(false);
-            navigate(`/exam-page/${quizId}`, {
-              state: { scorecardId, folderId }, // Pass scorecardId via state to the exam page
-            });
-          }
-        }, 1000);
+        // Wait 5 seconds before navigating to exam page
+        setTimeout(() => {
+          navigate(`/exam-page/${quizId}`, {
+            state: { scorecardId, folderId }, // Pass scorecardId via state to the exam page
+          });
+        }, 500);
       }
     } catch (error) {
       console.error("Error starting quiz:", error);
@@ -104,18 +95,16 @@ const Instruction = () => {
     }
   };
 
-
-
-  const handleCancelModal = () => {
-    clearInterval(timerRef); // Cleanup timer
-    setIsModalVisible(false);
-    navigate(`/exam-page/${quizId}`);
-  };
-
   if (loadingQuiz) {
     return (
       <Layout style={{ minHeight: "100vh", background: "#f9fafc" }}>
-        <Content style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+        <Content
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
           <Spin size="large" tip="Loading Quiz Details..." />
         </Content>
       </Layout>
@@ -125,8 +114,16 @@ const Instruction = () => {
   if (!quizDetails) {
     return (
       <Layout style={{ minHeight: "100vh", background: "#f9fafc" }}>
-        <Content style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-          <Typography.Text type="danger">Quiz details could not be loaded.</Typography.Text>
+        <Content
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Typography.Text type="danger">
+            Quiz details could not be loaded.
+          </Typography.Text>
         </Content>
       </Layout>
     );
@@ -146,11 +143,21 @@ const Instruction = () => {
           alignItems: "center",
         }}
       >
-        <Title level={5} style={{ margin: 0, fontWeight: "bold", fontSize: "25px" }}>
+        <Title
+          level={5}
+          style={{ margin: 0, fontWeight: "bold", fontSize: "25px" }}
+        >
           {quizDetails.quizName} {/* Quiz Name from API */}
         </Title>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "25px" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            fontSize: "25px",
+          }}
+        >
           {profileData?.image ? (
             <img
               src={profileData.image}
@@ -173,9 +180,10 @@ const Instruction = () => {
         </div>
       </Header>
 
-
       {/* Content */}
-      <Content style={{ padding: "24px", display: "flex", justifyContent: "center" }}>
+      <Content
+        style={{ padding: "24px", display: "flex", justifyContent: "center" }}
+      >
         <Card style={{ width: "100%" }}>
           {/* Test Information */}
           <Row style={{ marginBottom: "16px" }} align="middle">
@@ -216,14 +224,17 @@ const Instruction = () => {
             <Col style={{ marginLeft: "16px" }}>
               <Title level={5} style={{ margin: 0 }}>
                 {quizDetails.createdAt
-                  ? new Intl.DateTimeFormat('en-GB', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric',
-                  }).format(new Date(quizDetails.createdAt))
+                  ? new Intl.DateTimeFormat("en-GB", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    }).format(new Date(quizDetails.createdAt))
                   : "0"}
               </Title>
-              <Text>{quizDetails.questions?.length || "0"} Quesation • {quizDetails.quizTotalMarks || "0"} marks</Text>
+              <Text>
+                {quizDetails.questions?.length || "0"} Quesation •{" "}
+                {quizDetails.quizTotalMarks || "0"} marks
+              </Text>
             </Col>
           </Row>
 
@@ -234,16 +245,23 @@ const Instruction = () => {
             onChange={(e) => setIsCheckboxChecked(e.target.checked)}
             style={{ marginTop: "16px" }}
           >
-            I have read and understood the instructions. I agree that in case of not adhering to the
-            instructions, I shall be liable to be debarred from this test and/or disciplinary action,
-            which may include a ban from future tests.
+            I have read and understood the instructions. I agree that in case of
+            not adhering to the instructions, I shall be liable to be debarred
+            from this test and/or disciplinary action, which may include a ban
+            from future tests.
           </Checkbox>
-
         </Card>
       </Content>
 
       {/* Footer */}
-      <Footer style={{ textAlign: "center", background: "#fff", marginTop: "24px", borderTop: "1px solid #e8e8e8", }}>
+      <Footer
+        style={{
+          textAlign: "center",
+          background: "#fff",
+          marginTop: "24px",
+          borderTop: "1px solid #e8e8e8",
+        }}
+      >
         {/* Buttons */}
         <div
           style={{
@@ -256,7 +274,6 @@ const Instruction = () => {
             style={{
               height: "43px", // Adjust height here
               borderWidth: "1px", // Adjust border thickness here
-
             }}
             onClick={() => navigate(`/give-test/${quizId}`)}
           >
@@ -276,22 +293,6 @@ const Instruction = () => {
           </Button>
         </div>
       </Footer>
-
-
-      {/* Modal */}
-      <Modal
-        title="Please Wait"
-        visible={isModalVisible}
-        onCancel={handleCancelModal}
-        footer={[
-          <Button key="cancel" onClick={handleCancelModal}>
-            Cancel and Start Test
-          </Button>,
-        ]}
-        centered
-      >
-        <p>Redirecting to the test page in {timeLeft} seconds...</p>
-      </Modal>
     </Layout>
   );
 };

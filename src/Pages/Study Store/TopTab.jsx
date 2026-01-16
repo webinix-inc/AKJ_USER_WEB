@@ -11,7 +11,9 @@ const TopTab = () => {
       <div className="flex items-center gap-6 border-b border-apple-gray-200">
         <button
           className={`px-4 py-3 font-semibold text-base font-apple transition-colors duration-200 ${
-            location.pathname === "/studystore/categories" || location.pathname.startsWith("/studystore/categories")
+            location.pathname === "/studystore/categories" || 
+            location.pathname.startsWith("/studystore/categories") ||
+            location.pathname.startsWith("/studystore/books/")
               ? "text-apple-blue-600 border-b-2 border-apple-blue-600"
               : "text-apple-gray-600 hover:text-apple-gray-800"
           }`}

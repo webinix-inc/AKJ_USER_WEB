@@ -11,6 +11,7 @@ import img from "../../Image2/img38.jpeg";
 import HOC from "../../Components/HOC/HOC";
 import { getOptimizedCourseImage, getOptimizedBookImage, handleImageError } from "../../utils/imageUtils";
 import { toast } from "react-toastify";
+import TopTab from "./TopTab";
 
 const BuyNow = () => {
   const navigate = useNavigate();
@@ -105,6 +106,7 @@ const BuyNow = () => {
 
   return (
     <div className="buynow">
+      <TopTab />
       <div className="buynow1 mt-8">
         <p>
           <span onClick={() => navigate("/studystore/categories")}>

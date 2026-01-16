@@ -217,6 +217,21 @@ const Scorecard = () => {
     setCurrentQuestion(null);
   };
 
+  // Exit fullscreen and navigate to My Courses
+  const handleNavigateToMyCourses = async () => {
+    try {
+      // Exit fullscreen if active
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      }
+    } catch (err) {
+      console.error("Error exiting fullscreen:", err);
+      // Continue with navigation even if fullscreen exit fails
+    }
+    // Navigate to My Courses
+    navigate("/mycourses");
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen bg-gray-100">
@@ -508,7 +523,7 @@ const Scorecard = () => {
             <Space size="middle">
               <Button
                 type="default"
-                onClick={() => navigate("/mycourses")}
+                onClick={handleNavigateToMyCourses}
                 style={{
                   height: "36px",
                   borderRadius: "6px",

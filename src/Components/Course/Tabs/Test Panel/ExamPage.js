@@ -751,9 +751,9 @@ const ExamPage = () => {
             {quizDetails?.quizName}
           </Typography.Title>
         </Space>
-        <Button onClick={isFullscreen ? exitFullscreen : requestFullscreen}>
+        {/* <Button onClick={isFullscreen ? exitFullscreen : requestFullscreen}>
           {isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-        </Button>
+        </Button> */}
       </Header>
 
       {/* Warning Message */}
