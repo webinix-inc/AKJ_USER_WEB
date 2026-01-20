@@ -6,7 +6,7 @@ import "./Home.css";
 import "swiper/css";
 import { Autoplay } from "swiper/modules";
 
-import { useEffect, useState, Suspense, lazy } from "react";
+import { useEffect, useState, Suspense, lazy, useRef } from "react";
 import { AiOutlineVideoCamera } from "react-icons/ai";
 import { FaEye } from "react-icons/fa";
 import HOC from "../../Components/HOC/HOC";
@@ -16,14 +16,11 @@ import {
   handleImageError,
 } from "../../utils/imageUtils";
 import ProfileCompletionModal from "../Profile/ProfileCompletionModal";
+// Fix #6: Remove lazy loading for above-the-fold components
+import FreeVideoPlayer from "../../Components/FreeClass/FreeVideoPlayer";
+import PurchasedCoursesCarousel from "./PurchasedCoursesCarousel";
 
-// Lazy load below-the-fold components for better initial load performance
-const FreeVideoPlayer = lazy(() =>
-  import("../../Components/FreeClass/FreeVideoPlayer")
-);
-const PurchasedCoursesCarousel = lazy(() =>
-  import("./PurchasedCoursesCarousel")
-);
+// Only lazy load below-the-fold components
 const Testimonial = lazy(() => import("./Testimonial"));
 // Banner imports removed - not needed for dashboard
 
@@ -71,6 +68,10 @@ const Home = () => {
 
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [userId, setUserId] = useState(null);
+  
+  // Fix #4: Intersection Observer for performance - disable autoplay when not visible
+  const [isCoursesVisible, setIsCoursesVisible] = useState(false);
+  const coursesRef = useRef(null);
 
   // Authentication state tracking
 
@@ -83,6 +84,22 @@ const Home = () => {
       fetchPublicCourses(false); // Don't force refresh on mount
     }
   }, []); // Remove courses dependency to prevent infinite loop
+  
+  // Fix #4: Setup Intersection Observer for carousel autoplay optimization
+  useEffect(() => {
+    if (!coursesRef.current) return;
+    
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsCoursesVisible(entry.isIntersecting);
+      },
+      { threshold: 0.1 } // Trigger when 10% visible
+    );
+    
+    observer.observe(coursesRef.current);
+    
+    return () => observer.disconnect();
+  }, []);
 
   // Banner useEffect removed - not needed for dashboard
 
@@ -169,7 +186,7 @@ const Home = () => {
         </div>
 
         {/* Popular Courses Section */}
-        <div className="w-full">
+        <div className="w-full" ref={coursesRef}>
           <div className="text-center mb-6 animate-apple-slide-up">
             <h2 className="text-apple-title text-apple-gray-900 mb-2 font-apple">
               Popular{" "}
@@ -192,7 +209,7 @@ const Home = () => {
                 1024: { slidesPerView: 4, spaceBetween: 24 },
                 1280: { slidesPerView: 5, spaceBetween: 24 },
               }}
-              autoplay={{ delay: 3000, disableOnInteraction: false }}
+              autoplay={isCoursesVisible ? { delay: 3000, disableOnInteraction: false } : false}
               modules={[Autoplay]}
               className="pb-4"
               style={{ minHeight: "340px" }}
@@ -205,6 +222,8 @@ const Home = () => {
                         <img
                           src={getOptimizedCourseImage(course)}
                           alt={course.title}
+                          width="370"
+                          height="200"
                           className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500 ease-apple"
                           crossOrigin="anonymous"
                           loading="lazy"

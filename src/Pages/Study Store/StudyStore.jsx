@@ -33,40 +33,14 @@ const StudyStore = () => {
       setLoading(true);
       try {
         const response = await api.get("/admin/books");
-        console.log("📚 Raw books data:", response.data);
-        console.log(
-          "📚 First book courseNames:",
-          response.data[0]?.courseNames
-        );
+        console.log("📚 All books from API:", response.data);
+        console.log("📚 Total books count:", response.data.length);
 
-        const labeledBooks = response.data
-          .filter((book) => {
-            // Show all books that either belong to Book Store OR are marked to show everywhere.
-            const hasBookStore =
-              Array.isArray(book.courseNames) &&
-              book.courseNames.includes("Book Store");
-            const hasEmptyCourseNames =
-              !book.courseNames || book.courseNames.length === 0;
-            const shouldShowEverywhere =
-              typeof book.showUnder === "string" &&
-              book.showUnder.toLowerCase() === "both";
-
-            if (
-              !(hasBookStore || hasEmptyCourseNames || shouldShowEverywhere)
-            ) {
-              console.warn(
-                `🚫 Skipping book "${book.name}" — courseNames=${JSON.stringify(
-                  book.courseNames
-                )}, showUnder=${book.showUnder}`
-              );
-            }
-
-            return hasBookStore || hasEmptyCourseNames || shouldShowEverywhere;
-          })
-          .map((book) => ({
-            ...book,
-            label: getRandomLabel(),
-          }));
+        // Show all books from the API without filtering by courseNames
+        const labeledBooks = response.data.map((book) => ({
+          ...book,
+          label: getRandomLabel(),
+        }));
         setBooks(labeledBooks);
         setFilteredBooks(labeledBooks);
       } catch (error) {

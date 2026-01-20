@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
+import { createRoot } from "react-dom/client";
 import { useNavigate } from "react-router-dom";
 import "./StudyStore.css";
 import api from "../../api/axios";
 import HOC from "../../Components/HOC/HOC";
 import TopTab from "./TopTab";
+import PaymentReceipt from "../../Components/Course/PaymentReceipt";
 import {
   getOptimizedBookImage,
   handleImageError,
@@ -76,6 +78,101 @@ const My_Orders = () => {
       month: "short",
       day: "numeric",
     });
+  };
+
+  const generateReceiptPDF = async (receiptData, fallbackName) => {
+    const receiptContainer = document.createElement("div");
+    receiptContainer.style.position = "fixed";
+    receiptContainer.style.left = "-9999px";
+    receiptContainer.style.top = "0";
+    receiptContainer.style.width = "210mm";
+    receiptContainer.style.backgroundColor = "#ffffff";
+    document.body.appendChild(receiptContainer);
+
+    const root = createRoot(receiptContainer);
+    root.render(<PaymentReceipt receiptData={receiptData} />);
+
+    setTimeout(async () => {
+      try {
+        const receiptElement = receiptContainer.querySelector(".payment-receipt");
+        if (!receiptElement) {
+          throw new Error("Receipt element not found");
+        }
+
+        const html2canvas = (await import("html2canvas")).default;
+        const jsPDF = (await import("jspdf")).default;
+
+        const canvas = await html2canvas(receiptElement, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: "#ffffff",
+          logging: false,
+          width: receiptElement.scrollWidth,
+          height: receiptElement.scrollHeight,
+        });
+
+        const imgData = canvas.toDataURL("image/png");
+        const pdf = new jsPDF("p", "mm", "a4");
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+
+        const safeName = (fallbackName || "Book_Order")
+          .toString()
+          .replace(/\s+/g, "_");
+        const filename = `Payment_Receipt_${safeName}_${new Date().getTime()}.pdf`;
+        pdf.save(filename);
+      } catch (error) {
+        console.error("Error generating PDF:", error);
+        toast.error("Failed to generate receipt. Please try again.");
+      } finally {
+        try {
+          root.unmount();
+          if (document.body.contains(receiptContainer)) {
+            document.body.removeChild(receiptContainer);
+          }
+        } catch (cleanupError) {
+          console.error("Cleanup error:", cleanupError);
+        }
+      }
+    }, 600);
+  };
+
+  const handleDownloadReceipt = async (order) => {
+    try {
+      const user = order.user || {};
+      const book = order.book || {};
+      const totalAmount = Number(order.totalAmount) || Number(order.totalPaidAmount) || 0;
+      const quantity = Number(order.quantity) || 1;
+
+      const receiptData = {
+        courseTitle: book.name || "Book Purchase",
+        installmentNumber: 1,
+        totalInstallments: 1,
+        amount: totalAmount || (Number(book.price) * quantity) || 0,
+        paymentDate: order.createdAt || new Date(),
+        transactionId: order.transactionId || "N/A",
+        orderId: order.orderId || order._id || "N/A",
+        trackingNumber: "N/A",
+        paymentMode: "book",
+        studentName:
+          user.firstName && user.lastName
+            ? `${user.firstName} ${user.lastName}`
+            : user.firstName || user.lastName || "N/A",
+        studentEmail: user.email || "N/A",
+        studentPhone: user.phone || "N/A",
+        planType: "Book Purchase",
+        coursePrice: (Number(book.price) * quantity) || totalAmount || 0,
+        amountPaid: totalAmount || 0,
+        remainingAmount: 0,
+      };
+
+      await generateReceiptPDF(receiptData, book.name || "Book_Order");
+    } catch (error) {
+      console.error("❌ Error downloading receipt:", error);
+      toast.error("Failed to download receipt. Please try again.");
+    }
   };
 
   if (loading) {
@@ -292,6 +389,14 @@ const My_Orders = () => {
                       ₹{order.totalAmount || order.totalPaidAmount || 0}
                     </p>
                   </div>
+                </div>
+                <div className="mt-4 flex justify-end">
+                  <button
+                    onClick={() => handleDownloadReceipt(order)}
+                    className="btn-apple-primary px-5 py-2 text-sm font-semibold hover-lift"
+                  >
+                    Download Invoice
+                  </button>
                 </div>
               </div>
             );

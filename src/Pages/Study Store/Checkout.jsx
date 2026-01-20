@@ -2,10 +2,12 @@ import { Button, Modal } from "antd";
 import axios from "axios";
 import { City, Country, State } from "country-state-city";
 import React, { useEffect, useState } from "react";
+import { createRoot } from "react-dom/client";
 import CountryFlag from "react-country-flag";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import Select from "react-select";
 import HOC from "../../Components/HOC/HOC";
+import PaymentReceipt from "../../Components/Course/PaymentReceipt";
 import api from "../../api/axios";
 import { getOptimizedBookImage, handleImageError } from "../../utils/imageUtils";
 import "./Checkout.css";
@@ -129,6 +131,61 @@ function Checkout({ bookId }) {
     return missingField ? `Please fill in the ${missingField}.` : "";
   };
 
+  const generateReceiptPDF = async (receiptData) => {
+    const receiptContainer = document.createElement("div");
+    receiptContainer.style.position = "fixed";
+    receiptContainer.style.left = "-9999px";
+    receiptContainer.style.top = "0";
+    receiptContainer.style.width = "210mm";
+    receiptContainer.style.backgroundColor = "#ffffff";
+    document.body.appendChild(receiptContainer);
+
+    const root = createRoot(receiptContainer);
+    root.render(<PaymentReceipt receiptData={receiptData} />);
+
+    setTimeout(async () => {
+      try {
+        const receiptElement = receiptContainer.querySelector(".payment-receipt");
+        if (!receiptElement) {
+          throw new Error("Receipt element not found");
+        }
+
+        const html2canvas = (await import("html2canvas")).default;
+        const jsPDF = (await import("jspdf")).default;
+
+        const canvas = await html2canvas(receiptElement, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: "#ffffff",
+          logging: false,
+          width: receiptElement.scrollWidth,
+          height: receiptElement.scrollHeight,
+        });
+
+        const imgData = canvas.toDataURL("image/png");
+        const pdf = new jsPDF("p", "mm", "a4");
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+
+        const filename = `Payment_Receipt_Book_Order_${new Date().getTime()}.pdf`;
+        pdf.save(filename);
+      } catch (error) {
+        console.error("Error generating PDF:", error);
+      } finally {
+        try {
+          root.unmount();
+          if (document.body.contains(receiptContainer)) {
+            document.body.removeChild(receiptContainer);
+          }
+        } catch (cleanupError) {
+          console.error("Cleanup error:", cleanupError);
+        }
+      }
+    }, 600);
+  };
+
   useEffect(() => {
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
@@ -230,6 +287,39 @@ function Checkout({ bookId }) {
           setIsSuccessModalVisible(true); // Show the success popup
 
           await handleOrderPlacement(response);
+
+          try {
+            const totalAmount =
+              formData.isMultipleItems && formData.cart
+                ? Number(formData.cart.totalPaidAmount)
+                : Number(formData.book.price) * Number(formData.quantity);
+
+            const receiptData = {
+              courseTitle: orderDetails.isMultiple
+                ? "Book Store Order"
+                : orderDetails.bookName || "Book Purchase",
+              installmentNumber: 1,
+              totalInstallments: 1,
+              amount: totalAmount || 0,
+              paymentDate: new Date(),
+              transactionId: response.razorpay_payment_id || "N/A",
+              orderId: response.razorpay_order_id || "N/A",
+              trackingNumber: "N/A",
+              paymentMode: "book",
+              studentName:
+                `${formData.firstName} ${formData.lastName}`.trim() || "N/A",
+              studentEmail: formData.email || "N/A",
+              studentPhone: formData.phone || "N/A",
+              planType: orderDetails.isMultiple ? "Multi Item" : "Book Purchase",
+              coursePrice: totalAmount || 0,
+              amountPaid: totalAmount || 0,
+              remainingAmount: 0,
+            };
+
+            await generateReceiptPDF(receiptData);
+          } catch (receiptError) {
+            console.error("❌ Error auto-downloading book receipt:", receiptError);
+          }
         },
         prefill: {
           name: `${formData.firstName} ${formData.lastName}.trim()`,
@@ -424,7 +514,7 @@ function Checkout({ bookId }) {
 
   const mockPaymentProcessing = (method) => ({ success: true });
 
-  const countryOptions = Country.getAllCountries().map((country) => ({
+  const countryOptions = (Country?.getAllCountries ? Country.getAllCountries() : []).map((country) => ({
     value: country.isoCode,
     label: (
       <div>

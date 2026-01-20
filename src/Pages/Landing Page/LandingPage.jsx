@@ -1,4 +1,5 @@
 import React, { useState, useEffect, Suspense, lazy } from "react";
+import { useNavigate } from "react-router-dom";
 import NavbarLanding from "./NavbarLanding";
 
 // Lazy load all below-the-fold components for better initial load performance
@@ -14,6 +15,7 @@ const BannerCarousel = lazy(() =>
 );
 
 const LandingPage = () => {
+  const navigate = useNavigate(); // Fix #3: Use React Router navigation
   const [banners, setBanners] = useState([]);
   const [bannersLoading, setBannersLoading] = useState(false);
 
@@ -27,7 +29,10 @@ const LandingPage = () => {
         "https://lms-backend-724799456037.europe-west1.run.app/api/v1";
       const apiUrl = `${baseURL}/admin/banner`;
 
-      console.log("🔍 Fetching banners from:", apiUrl);
+      // Fix #5: Console logs only in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log("🔍 Fetching banners from:", apiUrl);
+      }
 
       const response = await fetch(apiUrl, {
         headers: {
@@ -35,24 +40,35 @@ const LandingPage = () => {
         },
       });
 
-      console.log("📡 Banner response status:", response.status);
+      if (process.env.NODE_ENV === 'development') {
+        console.log("📡 Banner response status:", response.status);
+      }
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       const data = await response.json();
-      console.log("📊 Banner data received:", data);
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log("📊 Banner data received:", data);
+      }
 
       if (data.status === 200 && data.data && Array.isArray(data.data)) {
-        console.log(`✅ Setting ${data.data.length} banners`);
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`✅ Setting ${data.data.length} banners`);
+        }
         setBanners(data.data);
       } else {
-        console.log("⚠️ No banner data found");
+        if (process.env.NODE_ENV === 'development') {
+          console.log("⚠️ No banner data found");
+        }
         setBanners([]);
       }
     } catch (error) {
-      console.error("❌ Error fetching banners:", error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error("❌ Error fetching banners:", error);
+      }
       setBanners([]);
     } finally {
       setBannersLoading(false);
@@ -68,8 +84,8 @@ const LandingPage = () => {
 
     // Handle course navigation if banner is associated with a course
     if (banner.course && banner.course._id) {
-      // Navigate to course details page
-      window.location.href = `/explorecourses/${banner.course._id}`;
+      // Fix #3: Use React Router navigate instead of window.location.href
+      navigate(`/explorecourses/${banner.course._id}`);
       return;
     }
 
@@ -79,8 +95,8 @@ const LandingPage = () => {
       return;
     }
 
-    // Default: navigate to explore courses page
-    window.location.href = "/explorecourses";
+    // Fix #3: Use React Router navigate for internal navigation
+    navigate("/explorecourses");
   };
 
   return (

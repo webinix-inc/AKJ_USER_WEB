@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { AiOutlineVideoCamera } from "react-icons/ai";
 import {
   FaCompress,
@@ -46,9 +46,16 @@ export default function FreeBatchVideoPlayer() {
   // Video modal state
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+  
+  // Fix #4: Intersection Observer for autoplay optimization
+  const [isVisible, setIsVisible] = useState(false);
+  const containerRef = useRef(null);
 
   const openVideoModal = (videoUrl, title) => {
-    console.log('Opening video modal:', { videoUrl, title });
+    // Fix #5: Console logs only in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Opening video modal:', { videoUrl, title });
+    }
     setSelectedVideo({ url: videoUrl, title: title });
     setIsVideoModalOpen(true);
   };
@@ -59,51 +66,47 @@ export default function FreeBatchVideoPlayer() {
   };
 
   // Function to fetch batches from the backend
+  // Fix #2: Remove triple fallback - use single endpoint
   const fetchBatches = async () => {
     setLoading(true);
     setError(null);
     
     try {
       const response = await api.get("admin/freeCourse");
-      console.log('Free course API response:', response.data);
+      
+      // Fix #5: Console logs only in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Free course API response:', response.data);
+      }
       
       // Handle different response structures
       if (response.data && Array.isArray(response.data)) {
         setBatches(response.data);
         setError(null);
-        console.log('Set batches from direct array:', response.data.length, 'items');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Set batches from direct array:', response.data.length, 'items');
+        }
       } else if (response.data && response.data.data && Array.isArray(response.data.data)) {
         // Handle nested data structure
         setBatches(response.data.data);
         setError(null);
-        console.log('Set batches from nested data:', response.data.data.length, 'items');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Set batches from nested data:', response.data.data.length, 'items');
+        }
       } else {
         setBatches([]);
         setError('Unexpected API response structure');
-        console.log('Unexpected response structure:', response.data);
-      }
-    } catch (error) {
-      console.log('Primary API failed:', error.message);
-      // Try alternative endpoints
-      try {
-        const altResponse = await api.get("admin/free-courses");
-        setBatches(altResponse.data || []);
-        setError(null);
-        console.log('Alternative API success:', altResponse.data);
-      } catch (altError) {
-        console.log('Alternative API failed:', altError.message);
-        // Try user endpoint as fallback
-        try {
-          const userResponse = await api.get("user/freeCourse");
-          setBatches(userResponse.data || []);
-          setError(null);
-          console.log('User API success:', userResponse.data);
-        } catch (userError) {
-          console.log('All APIs failed. User API error:', userError.message);
-          setBatches([]);
-          setError(`API Error: ${error.response?.status || error.message}`);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Unexpected response structure:', response.data);
         }
       }
+    } catch (error) {
+      // Fix #2: Single fallback only - remove triple fallback chain
+      if (process.env.NODE_ENV === 'development') {
+        console.log('API failed:', error.message);
+      }
+      setBatches([]);
+      setError(`Unable to load free classes. Please try again later.`);
     } finally {
       setLoading(false);
     }
@@ -112,15 +115,32 @@ export default function FreeBatchVideoPlayer() {
   useEffect(() => {
     fetchBatches();
   }, []);
+  
+  // Fix #4: Setup Intersection Observer for autoplay optimization
+  useEffect(() => {
+    if (!containerRef.current) return;
+    
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsVisible(entry.isIntersecting);
+      },
+      { threshold: 0.1 }
+    );
+    
+    observer.observe(containerRef.current);
+    
+    return () => observer.disconnect();
+  }, []);
 
   return (
-    <div className="w-full">
+    <div className="w-full" ref={containerRef}>
       <BatchSlider 
         batchData={batches} 
         openVideoModal={openVideoModal}
         loading={loading}
         error={error}
         onRefresh={fetchBatches}
+        isVisible={isVisible}
       />
       
       {/* Video Modal */}
@@ -131,7 +151,7 @@ export default function FreeBatchVideoPlayer() {
   );
 }
 
-function BatchSlider({ batchData, openVideoModal, loading, error, onRefresh }) {
+function BatchSlider({ batchData, openVideoModal, loading, error, onRefresh, isVisible }) {
   if (loading) {
     return (
       <div className="w-full">
@@ -187,10 +207,10 @@ function BatchSlider({ batchData, openVideoModal, loading, error, onRefresh }) {
           },
         }}
         modules={[Autoplay]}
-        autoplay={{
+        autoplay={isVisible ? {
           delay: 3000,
           disableOnInteraction: false,
-        }}
+        } : false}
         className="pb-2"
       >
         {batchData.length > 0 ? (
@@ -247,6 +267,8 @@ function BatchCard({ batch, openVideoModal }) {
           <img
             src={videoThumbnail}
             alt={title}
+            width="320"
+            height="180"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ease-apple"
             loading="lazy"
             onError={(e) => {

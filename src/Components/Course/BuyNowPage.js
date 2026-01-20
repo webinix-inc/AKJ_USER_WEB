@@ -454,6 +454,107 @@ const BuyNowPage = () => {
     }, 1000);
   };
 
+  const getReceiptTotals = async ({
+    paymentMode,
+    courseId,
+    userId,
+    amount,
+    courseDetails,
+  }) => {
+    const baseTotal = courseDetails?.price || amount || 0;
+    if (paymentMode !== "installment") {
+      return {
+        totalInstallments: 1,
+        totalAmount: baseTotal,
+        amountPaid: baseTotal,
+        remainingAmount: 0,
+      };
+    }
+
+    try {
+      const timelineResponse = await api.get(
+        `/admin/installments/${courseId}/user/${userId}/timeline`
+      );
+      const timeline =
+        timelineResponse.data?.timeline || timelineResponse.data || [];
+      const totalAmount =
+        timelineResponse.data?.totalAmount ||
+        timeline.reduce((sum, inst) => sum + (inst.amount || 0), 0);
+      const amountPaid = timeline
+        .filter((inst) => inst.isPaid)
+        .reduce((sum, inst) => sum + (inst.amount || 0), 0);
+      const remainingAmount =
+        timelineResponse.data?.remainingAmount ??
+        Math.max(totalAmount - amountPaid, 0);
+
+      return {
+        totalInstallments: timeline.length || 1,
+        totalAmount: totalAmount || baseTotal,
+        amountPaid,
+        remainingAmount,
+      };
+    } catch (error) {
+      console.warn("⚠️ Could not fetch timeline totals for receipt:", error);
+      return {
+        totalInstallments: 1,
+        totalAmount: baseTotal,
+        amountPaid: baseTotal,
+        remainingAmount: 0,
+      };
+    }
+  };
+
+  const getReceiptUserDetails = async () => {
+    const firstName = userData?.firstName || "";
+    const lastName = userData?.lastName || "";
+    const fullName = `${firstName} ${lastName}`.trim();
+
+    if (fullName || userData?.email) {
+      return {
+        studentName: fullName || userData?.name || "N/A",
+        studentEmail: userData?.email || "N/A",
+        studentPhone: userData?.phone || "N/A",
+      };
+    }
+
+    try {
+      const freshProfile = await fetchUserProfile(true);
+      const freshFirst = freshProfile?.firstName || "";
+      const freshLast = freshProfile?.lastName || "";
+      const freshFull = `${freshFirst} ${freshLast}`.trim();
+      return {
+        studentName: freshFull || freshProfile?.name || "N/A",
+        studentEmail: freshProfile?.email || "N/A",
+        studentPhone: freshProfile?.phone || freshProfile?.mobile || "N/A",
+      };
+    } catch (error) {
+      console.warn("⚠️ Could not refresh profile for receipt:", error);
+    }
+
+    try {
+      const stored = localStorage.getItem("userData");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const storedFirst = parsed?.firstName || "";
+        const storedLast = parsed?.lastName || "";
+        const storedFull = `${storedFirst} ${storedLast}`.trim();
+        return {
+          studentName: storedFull || parsed?.name || "N/A",
+          studentEmail: parsed?.email || "N/A",
+          studentPhone: parsed?.phone || parsed?.mobile || "N/A",
+        };
+      }
+    } catch (error) {
+      console.warn("⚠️ Could not read userData from storage:", error);
+    }
+
+    return {
+      studentName: "N/A",
+      studentEmail: "N/A",
+      studentPhone: "N/A",
+    };
+  };
+
   const handlePayment = async ({
     amount,
     courseId,
@@ -779,12 +880,24 @@ const BuyNowPage = () => {
                         const finalOrderId = userOrder.orderId;
                         const finalPaymentId = userOrder.paymentId;
                         const finalTrackingNumber = userOrder.trackingNumber;
+                        const receiptTotals = await getReceiptTotals({
+                          paymentMode,
+                          courseId,
+                          userId,
+                          amount,
+                          courseDetails,
+                        });
+                        const receiptUser = await getReceiptUserDetails();
+                        const receiptInstallmentNumber =
+                          paymentMode === "installment" && installmentIndex !== null
+                            ? installmentIndex + 1
+                            : 1;
 
                         // Prepare receipt data
                         const receiptData = {
                           courseTitle: courseDetails?.title || "Course",
-                          installmentNumber: 1,
-                          totalInstallments: 1,
+                          installmentNumber: receiptInstallmentNumber,
+                          totalInstallments: receiptTotals.totalInstallments,
                           amount:
                             amount ||
                             userOrder.amount / 100 ||
@@ -797,15 +910,15 @@ const BuyNowPage = () => {
                           transactionId: finalPaymentId || "N/A",
                           orderId: finalOrderId || "N/A",
                           trackingNumber: finalTrackingNumber || "N/A",
-                          studentName:
-                            userData?.firstName && userData?.lastName
-                              ? `${userData.firstName} ${userData.lastName}`
-                              : userData?.name || "N/A",
-                          studentEmail: userData?.email || "N/A",
+                          paymentMode:
+                            paymentMode === "installment" ? "installment" : "full",
+                          studentName: receiptUser.studentName,
+                          studentEmail: receiptUser.studentEmail,
+                          studentPhone: receiptUser.studentPhone,
                           planType: planType || "Full Payment",
-                          coursePrice: courseDetails?.price || amount || 0,
-                          amountPaid: amount || courseDetails?.price || 0,
-                          remainingAmount: 0,
+                          coursePrice: receiptTotals.totalAmount,
+                          amountPaid: receiptTotals.amountPaid,
+                          remainingAmount: receiptTotals.remainingAmount,
                         };
 
                         console.log(
@@ -826,24 +939,36 @@ const BuyNowPage = () => {
                 }
 
                 // Prepare receipt data with available information
+                const receiptTotals = await getReceiptTotals({
+                  paymentMode,
+                  courseId,
+                  userId,
+                  amount,
+                  courseDetails,
+                });
+                const receiptUser = await getReceiptUserDetails();
+                const receiptInstallmentNumber =
+                  paymentMode === "installment" && installmentIndex !== null
+                    ? installmentIndex + 1
+                    : 1;
                 const receiptData = {
                   courseTitle: courseDetails?.title || "Course",
-                  installmentNumber: 1,
-                  totalInstallments: 1,
+                  installmentNumber: receiptInstallmentNumber,
+                  totalInstallments: receiptTotals.totalInstallments,
                   amount: amount || courseDetails?.price || 0,
                   paymentDate: new Date(),
                   transactionId: paymentId || "N/A",
                   orderId: orderId || "N/A",
                   trackingNumber: trackingNumber,
-                  studentName:
-                    userData?.firstName && userData?.lastName
-                      ? `${userData.firstName} ${userData.lastName}`
-                      : userData?.name || "N/A",
-                  studentEmail: userData?.email || "N/A",
+                  paymentMode:
+                    paymentMode === "installment" ? "installment" : "full",
+                  studentName: receiptUser.studentName,
+                  studentEmail: receiptUser.studentEmail,
+                  studentPhone: receiptUser.studentPhone,
                   planType: planType || "Full Payment",
-                  coursePrice: courseDetails?.price || amount || 0,
-                  amountPaid: amount || courseDetails?.price || 0,
-                  remainingAmount: 0,
+                  coursePrice: receiptTotals.totalAmount,
+                  amountPaid: receiptTotals.amountPaid,
+                  remainingAmount: receiptTotals.remainingAmount,
                 };
 
                 console.log(

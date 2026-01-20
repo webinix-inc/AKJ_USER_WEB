@@ -487,13 +487,12 @@ const Messages = () => {
   return (
     <div className="w-full animate-apple-fade-in">
       {/* Hero Section - Compact */}
-      <div className="relative overflow-hidden gradient-apple-primary text-white compact-hero rounded-apple-xl mb-4 shadow-apple mx-4">
-        <div className="absolute inset-0 bg-black/10 rounded-apple-xl"></div>
-        <div className="relative compact-container text-center animate-apple-slide-up">
-          <h1 className="app-subtitle text-white mb-2 font-apple">
-            💬 <span className="text-brand-accent">Messages</span>
+      <div className="bg-white border border-gray-200 rounded-lg mb-4 mx-4 px-6 py-5">
+        <div className="text-left">
+          <h1 className="text-2xl font-semibold text-gray-800 mb-1">
+            Messages
           </h1>
-          <p className="app-body text-apple-blue-100 max-w-2xl mx-auto">
+          <p className="text-sm text-gray-600">
             Connect with instructors and get instant support
           </p>
         </div>

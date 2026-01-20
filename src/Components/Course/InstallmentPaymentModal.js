@@ -35,6 +35,123 @@ const InstallmentPaymentModal = ({
   const [downloadingReceipt, setDownloadingReceipt] = useState(null); // Track which receipt is being downloaded
   const [hasAttemptedFetch, setHasAttemptedFetch] = useState(false); // Track if we've attempted to fetch data
 
+  const getReceiptUserDetails = async () => {
+    const firstName = userData?.firstName || profileData?.firstName || "";
+    const lastName = userData?.lastName || profileData?.lastName || "";
+    const fullName = `${firstName} ${lastName}`.trim();
+
+    if (fullName || userData?.email || profileData?.email) {
+      return {
+        studentName: fullName || userData?.name || profileData?.name || "N/A",
+        studentEmail: userData?.email || profileData?.email || "N/A",
+        studentPhone:
+          userData?.phone ||
+          profileData?.phone ||
+          profileData?.mobile ||
+          "N/A",
+      };
+    }
+
+    try {
+      const freshProfile = await fetchUserProfile(true);
+      const freshFirst = freshProfile?.firstName || "";
+      const freshLast = freshProfile?.lastName || "";
+      const freshFull = `${freshFirst} ${freshLast}`.trim();
+      return {
+        studentName: freshFull || freshProfile?.name || "N/A",
+        studentEmail: freshProfile?.email || "N/A",
+        studentPhone: freshProfile?.phone || freshProfile?.mobile || "N/A",
+      };
+    } catch (error) {
+      console.warn("⚠️ Could not refresh profile for receipt:", error);
+    }
+
+    try {
+      const stored = localStorage.getItem("userData");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const storedFirst = parsed?.firstName || "";
+        const storedLast = parsed?.lastName || "";
+        const storedFull = `${storedFirst} ${storedLast}`.trim();
+        return {
+          studentName: storedFull || parsed?.name || "N/A",
+          studentEmail: parsed?.email || "N/A",
+          studentPhone: parsed?.phone || parsed?.mobile || "N/A",
+        };
+      }
+    } catch (error) {
+      console.warn("⚠️ Could not read userData from storage:", error);
+    }
+
+    return {
+      studentName: "N/A",
+      studentEmail: "N/A",
+      studentPhone: "N/A",
+    };
+  };
+
+  const getReceiptTotals = () => {
+    const purchasedCourse = userData?.purchasedCourses?.find((pc) => {
+      const pcCourseId = pc.course?.toString?.() || pc.course;
+      const currentCourseId = courseId?.toString?.() || courseId;
+      return pcCourseId === currentCourseId && pc.paymentType === "installment";
+    });
+
+    const timelineTotalInstallments = Array.isArray(installmentDetails)
+      ? Math.max(
+          ...installmentDetails.map((inst, idx) => {
+            if (inst?.totalInstallments) return Number(inst.totalInstallments);
+            if (inst?.installmentNumber) return Number(inst.installmentNumber);
+            if (Number.isFinite(inst?.installmentIndex))
+              return Number(inst.installmentIndex) + 1;
+            return idx + 1;
+          })
+        )
+      : 0;
+
+    const purchasedTotalInstallments =
+      purchasedCourse?.installments?.length || 0;
+
+    const totalInstallments =
+      timelineTotalInstallments ||
+      purchasedTotalInstallments ||
+      (Array.isArray(installmentDetails) ? installmentDetails.length : 0) ||
+      1;
+
+    const totalFromTimeline = Array.isArray(installmentDetails)
+      ? installmentDetails.reduce((sum, inst) => sum + (inst.amount || 0), 0)
+      : 0;
+
+    const paidFromTimeline = Array.isArray(installmentDetails)
+      ? installmentDetails
+          .filter((inst) => inst.isPaid)
+          .reduce((sum, inst) => sum + (inst.amount || 0), 0)
+      : 0;
+
+    const totalFromPurchased = purchasedCourse?.installments?.length
+      ? purchasedCourse.installments.reduce(
+          (sum, inst) => sum + (inst.amount || 0),
+          0
+        )
+      : 0;
+
+    const paidFromPurchased = purchasedCourse?.installments?.length
+      ? purchasedCourse.installments
+          .filter((inst) => inst.isPaid)
+          .reduce((sum, inst) => sum + (inst.amount || 0), 0)
+      : 0;
+
+    const totalAmount =
+      planTotalAmount || totalFromPurchased || totalFromTimeline || coursePrice || 0;
+    const amountPaid = paidFromPurchased || paidFromTimeline || 0;
+    const remainingAmount =
+      planRemainingAmount !== null && planRemainingAmount !== undefined
+        ? planRemainingAmount
+        : Math.max(totalAmount - amountPaid, 0);
+
+    return { totalInstallments, totalAmount, amountPaid, remainingAmount };
+  };
+
   // Fetch installment details
   useEffect(() => {
     const fetchInstallmentDetails = async () => {
@@ -1236,10 +1353,12 @@ const InstallmentPaymentModal = ({
                       const finalTrackingNumber = userOrder.trackingNumber;
 
                       // Prepare receipt data
+                      const receiptTotals = getReceiptTotals();
+                      const receiptUser = await getReceiptUserDetails();
                       const receiptData = {
                         courseTitle: courseTitle || "Course",
                         installmentNumber: actualInstallmentIndex + 1,
-                        totalInstallments: installmentDetails?.length || 1,
+                        totalInstallments: receiptTotals.totalInstallments,
                         amount:
                           nextInstallment.amount || userOrder.amount / 100 || 0,
                         paymentDate:
@@ -1247,20 +1366,14 @@ const InstallmentPaymentModal = ({
                         transactionId: finalPaymentId || "N/A",
                         orderId: finalOrderId || "N/A",
                         trackingNumber: finalTrackingNumber || "N/A",
-                        studentName:
-                          userData?.firstName && userData?.lastName
-                            ? `${userData.firstName} ${userData.lastName}`
-                            : profileData?.firstName && profileData?.lastName
-                            ? `${profileData.firstName} ${profileData.lastName}`
-                            : userData?.name || profileData?.name || "N/A",
-                        studentEmail:
-                          userData?.email || profileData?.email || "N/A",
+                        paymentMode: "installment",
+                        studentName: receiptUser.studentName,
+                        studentEmail: receiptUser.studentEmail,
+                        studentPhone: receiptUser.studentPhone,
                         planType: planType || "Standard",
-                        coursePrice: coursePrice || planTotalAmount || 0,
-                        amountPaid: (installmentDetails || [])
-                          .filter((inst) => inst.isPaid)
-                          .reduce((sum, inst) => sum + (inst.amount || 0), 0),
-                        remainingAmount: planRemainingAmount || 0,
+                        coursePrice: receiptTotals.totalAmount,
+                        amountPaid: receiptTotals.amountPaid,
+                        remainingAmount: receiptTotals.remainingAmount,
                       };
 
                       console.log(
@@ -1284,28 +1397,25 @@ const InstallmentPaymentModal = ({
               }
 
               // Prepare receipt data with available information
+              const receiptTotals = getReceiptTotals();
+              const receiptUser = await getReceiptUserDetails();
               const receiptData = {
                 courseTitle: courseTitle || "Course",
                 installmentNumber: actualInstallmentIndex + 1,
-                totalInstallments: installmentDetails?.length || 1,
+                totalInstallments: receiptTotals.totalInstallments,
                 amount: nextInstallment.amount || 0,
                 paymentDate: new Date(),
                 transactionId: paymentId || "N/A",
                 orderId: orderId || "N/A",
                 trackingNumber: trackingNumber,
-                studentName:
-                  userData?.firstName && userData?.lastName
-                    ? `${userData.firstName} ${userData.lastName}`
-                    : profileData?.firstName && profileData?.lastName
-                    ? `${profileData.firstName} ${profileData.lastName}`
-                    : userData?.name || profileData?.name || "N/A",
-                studentEmail: userData?.email || profileData?.email || "N/A",
+                paymentMode: "installment",
+                studentName: receiptUser.studentName,
+                studentEmail: receiptUser.studentEmail,
+                studentPhone: receiptUser.studentPhone,
                 planType: planType || "Standard",
-                coursePrice: coursePrice || planTotalAmount || 0,
-                amountPaid: (installmentDetails || [])
-                  .filter((inst) => inst.isPaid)
-                  .reduce((sum, inst) => sum + (inst.amount || 0), 0),
-                remainingAmount: planRemainingAmount || 0,
+                coursePrice: receiptTotals.totalAmount,
+                amountPaid: receiptTotals.amountPaid,
+                remainingAmount: receiptTotals.remainingAmount,
               };
 
               console.log("📄 Generating receipt PDF with data:", receiptData);
@@ -1520,10 +1630,12 @@ const InstallmentPaymentModal = ({
               }));
 
               // Use the found order
+              const receiptTotals = getReceiptTotals();
+              const receiptUser = await getReceiptUserDetails();
               const receiptData = {
                 courseTitle: courseTitle || "Course",
                 installmentNumber: installmentIndex + 1,
-                totalInstallments: installmentDetails?.length || 1,
+                totalInstallments: receiptTotals.totalInstallments,
                 amount: installment.amount || orderData.amount,
                 paymentDate:
                   orderData.paymentDate ||
@@ -1533,25 +1645,14 @@ const InstallmentPaymentModal = ({
                 transactionId: orderData.paymentId || "N/A",
                 orderId: orderData.orderId || "N/A",
                 trackingNumber: orderData.trackingNumber || "N/A",
-                studentName:
-                  userData?.firstName && userData?.lastName
-                    ? `${userData.firstName} ${userData.lastName}`
-                    : profileData?.firstName && profileData?.lastName
-                    ? `${profileData.firstName} ${profileData.lastName}`
-                    : userData?.name || profileData?.name || "N/A",
-                studentEmail: userData?.email || profileData?.email || "N/A",
+                paymentMode: "installment",
+                studentName: receiptUser.studentName,
+                studentEmail: receiptUser.studentEmail,
+                studentPhone: receiptUser.studentPhone,
                 planType: planType || "Standard",
-                coursePrice: coursePrice || planTotalAmount || 0,
-                amountPaid:
-                  userData?.purchasedCourses?.find((pc) => {
-                    const courseIdStr = pc.course?.toString?.() || pc.course;
-                    const currentCourseId = courseId?.toString?.() || courseId;
-                    return (
-                      courseIdStr === currentCourseId &&
-                      pc.paymentType === "installment"
-                    );
-                  })?.amountPaid || 0,
-                remainingAmount: planRemainingAmount || 0,
+                coursePrice: receiptTotals.totalAmount,
+                amountPaid: receiptTotals.amountPaid,
+                remainingAmount: receiptTotals.remainingAmount,
               };
 
               await generateReceiptPDF(receiptData, installmentIndex);
@@ -1563,35 +1664,26 @@ const InstallmentPaymentModal = ({
         }
 
         // If still no order found, generate receipt with available data
+        const receiptTotals = getReceiptTotals();
+        const receiptUser = await getReceiptUserDetails();
         const receiptData = {
           courseTitle: courseTitle || "Course",
           installmentNumber: installmentIndex + 1,
-          totalInstallments: installmentDetails?.length || 1,
+          totalInstallments: receiptTotals.totalInstallments,
           amount: installment.amount || 0,
           paymentDate:
             installment.paymentDate || installment.paidDate || new Date(),
           transactionId: "N/A",
           orderId: "N/A",
           trackingNumber: "N/A",
-          studentName:
-            userData?.firstName && userData?.lastName
-              ? `${userData.firstName} ${userData.lastName}`
-              : profileData?.firstName && profileData?.lastName
-              ? `${profileData.firstName} ${profileData.lastName}`
-              : userData?.name || profileData?.name || "N/A",
-          studentEmail: userData?.email || profileData?.email || "N/A",
+          paymentMode: "installment",
+          studentName: receiptUser.studentName,
+          studentEmail: receiptUser.studentEmail,
+          studentPhone: receiptUser.studentPhone,
           planType: planType || "Standard",
-          coursePrice: coursePrice || planTotalAmount || 0,
-          amountPaid:
-            userData?.purchasedCourses?.find((pc) => {
-              const courseIdStr = pc.course?.toString?.() || pc.course;
-              const currentCourseId = courseId?.toString?.() || courseId;
-              return (
-                courseIdStr === currentCourseId &&
-                pc.paymentType === "installment"
-              );
-            })?.amountPaid || 0,
-          remainingAmount: planRemainingAmount || 0,
+          coursePrice: receiptTotals.totalAmount,
+          amountPaid: receiptTotals.amountPaid,
+          remainingAmount: receiptTotals.remainingAmount,
         };
 
         await generateReceiptPDF(receiptData, installmentIndex);
@@ -1599,10 +1691,12 @@ const InstallmentPaymentModal = ({
       }
 
       // Prepare receipt data
+      const receiptTotals = getReceiptTotals();
+      const receiptUser = await getReceiptUserDetails();
       const receiptData = {
         courseTitle: courseTitle || "Course",
         installmentNumber: installmentIndex + 1,
-        totalInstallments: installmentDetails?.length || 1,
+        totalInstallments: receiptTotals.totalInstallments,
         amount: installment.amount || order.amount,
         paymentDate:
           order.paymentDate ||
@@ -1612,25 +1706,14 @@ const InstallmentPaymentModal = ({
         transactionId: order.paymentId || "N/A",
         orderId: order.orderId || "N/A",
         trackingNumber: order.trackingNumber || "N/A",
-        studentName:
-          userData?.firstName && userData?.lastName
-            ? `${userData.firstName} ${userData.lastName}`
-            : profileData?.firstName && profileData?.lastName
-            ? `${profileData.firstName} ${profileData.lastName}`
-            : userData?.name || profileData?.name || "N/A",
-        studentEmail: userData?.email || profileData?.email || "N/A",
+        paymentMode: "installment",
+        studentName: receiptUser.studentName,
+        studentEmail: receiptUser.studentEmail,
+        studentPhone: receiptUser.studentPhone,
         planType: planType || "Standard",
-        coursePrice: coursePrice || planTotalAmount || 0,
-        amountPaid:
-          userData?.purchasedCourses?.find((pc) => {
-            const courseIdStr = pc.course?.toString?.() || pc.course;
-            const currentCourseId = courseId?.toString?.() || courseId;
-            return (
-              courseIdStr === currentCourseId &&
-              pc.paymentType === "installment"
-            );
-          })?.amountPaid || 0,
-        remainingAmount: planRemainingAmount || 0,
+        coursePrice: receiptTotals.totalAmount,
+        amountPaid: receiptTotals.amountPaid,
+        remainingAmount: receiptTotals.remainingAmount,
       };
 
       await generateReceiptPDF(receiptData, installmentIndex);
@@ -1684,7 +1767,7 @@ const InstallmentPaymentModal = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-auto max-h-[90vh] overflow-y-auto">
+      <div className="mt-20 bg-white rounded-2xl shadow-2xl w-full max-w-md mx-auto max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">

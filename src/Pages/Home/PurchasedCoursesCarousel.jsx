@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { AiOutlineBook } from "react-icons/ai";
 import { FaExclamationTriangle, FaGraduationCap, FaShoppingCart } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
@@ -26,9 +26,30 @@ const customStyles = `
   .swiper-slide {
     height: auto !important;
     min-height: 300px !important;
+    display: flex !important;
+    width: 370px !important;
   }
   .swiper-wrapper {
     align-items: stretch !important;
+  }
+  .swiper-slide > div {
+    height: 100%;
+    width: 100%;
+  }
+  @media (max-width: 1024px) {
+    .swiper-slide {
+      width: 320px !important;
+    }
+  }
+  @media (max-width: 768px) {
+    .swiper-slide {
+      width: 280px !important;
+    }
+  }
+  @media (max-width: 640px) {
+    .swiper-slide {
+      width: 100% !important;
+    }
   }
 `;
 
@@ -45,6 +66,10 @@ const PurchasedCoursesCarousel = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  
+  // Fix #4: Intersection Observer for autoplay optimization
+  const [isVisible, setIsVisible] = useState(false);
+  const containerRef = useRef(null);
 
   // Fetch purchased courses using the dedicated API
   useEffect(() => {
@@ -75,6 +100,22 @@ const PurchasedCoursesCarousel = () => {
     };
 
     fetchPurchasedCourses();
+  }, []);
+  
+  // Fix #4: Setup Intersection Observer for autoplay optimization
+  useEffect(() => {
+    if (!containerRef.current) return;
+    
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsVisible(entry.isIntersecting);
+      },
+      { threshold: 0.1 }
+    );
+    
+    observer.observe(containerRef.current);
+    
+    return () => observer.disconnect();
   }, []);
 
   const handleExploreClick = (course) => {
@@ -132,7 +173,7 @@ const PurchasedCoursesCarousel = () => {
   }
 
   return (
-    <div className="py-4">
+    <div className="py-4" ref={containerRef}>
       <div className="text-center mb-4">
         <h2 className="text-lg md:text-xl font-bold text-brand-primary mb-1">
           My <span className="bg-gradient-to-r from-teal-500 to-teal-600 bg-clip-text text-transparent">Courses</span>
@@ -144,12 +185,12 @@ const PurchasedCoursesCarousel = () => {
       
       <div className="bg-white rounded-lg shadow-lg p-4 md:p-4">
         <Swiper
-          spaceBetween={8}
-          slidesPerView={1}
-          autoplay={{
+          spaceBetween={12}
+          slidesPerView="auto"
+          autoplay={isVisible ? {
             delay: 4000,
             disableOnInteraction: false,
-          }}
+          } : false}
           modules={[Autoplay]}
           breakpoints={{
             1400: {
@@ -178,19 +219,20 @@ const PurchasedCoursesCarousel = () => {
           {purchasedCourses.length > 0 ? (
             purchasedCourses.map((course, index) => (
               <SwiperSlide key={index}>
-                <div className="card-apple-interactive flex flex-col">
-                  <div className="relative overflow-hidden flex-shrink-0 rounded-t-apple-lg">
+                <div className="card-apple-interactive flex flex-col h-full">
+                  <div className="relative overflow-hidden flex-shrink-0 rounded-t-apple-lg aspect-video w-full">
                     <img
                       src={getOptimizedCourseImage(course)}
                       alt={course.title}
-                      className="w-full h-auto object-contain group-hover:scale-105 transition-transform duration-500 ease-apple"
+                      width="370"
+                      height="208"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-apple"
                       crossOrigin="anonymous"
                       loading="lazy"
                       onError={(e) => handleImageError(e, course)}
                       style={{ 
                         backgroundColor: '#f3f4f6',
-                        maxHeight: 'none',
-                        minHeight: '180px'
+                        minHeight: '100%'
                       }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -242,7 +284,7 @@ const PurchasedCoursesCarousel = () => {
                   You haven't purchased any courses yet. Explore our comprehensive course catalog to start your learning journey!
                 </p>
                 <button 
-                  onClick={() => window.location.href = '/explorecourses'}
+                  onClick={() => navigate('/explorecourses')}
                   className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-[#023d50] to-[#0086b2] text-white rounded-full font-medium hover:from-[#1D0D76] hover:to-[#023d50] transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-xs"
                 >
                   <AiOutlineBook className="mr-1 text-xs" />
